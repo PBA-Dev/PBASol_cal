@@ -3,7 +3,6 @@ from app import app, db
 from models import Event
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
-import json
 
 @app.route('/')
 def index():
@@ -110,29 +109,6 @@ def get_events():
         start_date = datetime.now().date()
         end_date = start_date + timedelta(days=30)
 
-    events = get_events_for_period(start_date.isoformat(), end_date.isoformat())
-    return jsonify(events)
-
-@app.route('/embed')
-def embed():
-    view = request.args.get('view', 'month')
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-
-    if not start_date or not end_date:
-        today = datetime.now().date()
-        start_date = today.replace(day=1).isoformat()
-        end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1).isoformat()
-
-    events = get_events_for_period(start_date, end_date)
-    events_json = json.dumps(events)
-
-    return render_template('embed.html', embedded=True, view=view, events=events_json, start_date=start_date, end_date=end_date)
-
-def get_events_for_period(start_date, end_date):
-    start_date = datetime.fromisoformat(start_date).date()
-    end_date = datetime.fromisoformat(end_date).date()
-
     events = Event.query.filter(
         ((Event.date >= start_date) & (Event.date <= end_date)) |
         (Event.is_recurring == True)
@@ -160,7 +136,7 @@ def get_events_for_period(start_date, end_date):
                 'category': event.category
             })
 
-    return events_by_date
+    return jsonify(events_by_date)
 
 def generate_recurring_dates(event, start_date, end_date):
     if not event.date or not start_date or not end_date:
@@ -186,6 +162,11 @@ def generate_recurring_dates(event, start_date, end_date):
                 current_date = current_date.replace(year=current_date.year + 1, day=28)
 
     return dates
+
+@app.route('/embed')
+def embed():
+    view = request.args.get('view', 'month')
+    return render_template('embed.html', embedded=True, view=view)
 
 @app.route('/manage_events')
 def manage_events():
