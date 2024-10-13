@@ -258,6 +258,7 @@ dependencies = [
     { name = "flask-sqlalchemy" },
     { name = "flask-wtf" },
     { name = "psycopg2-binary" },
+    { name = "sqlalchemy" },
 ]
 
 [package.metadata]
@@ -267,6 +268,7 @@ requires-dist = [
     { name = "flask-sqlalchemy", specifier = ">=3.1.1" },
     { name = "flask-wtf", specifier = ">=1.2.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.9" },
+    { name = "sqlalchemy", specifier = ">=2.0.35" },
 ]
 
 [[package]]

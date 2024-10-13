@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash
 from app import app, db
 from models import Event
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask_wtf.csrf import generate_csrf
 
 @app.route('/')
@@ -45,8 +45,7 @@ def embed():
 @app.route('/manage_events')
 def manage_events():
     events = Event.query.order_by(Event.date, Event.time).all()
-    csrf_token = generate_csrf()
-    return render_template('manage_events.html', events=events, csrf_token=csrf_token)
+    return render_template('manage_events.html', events=events)
 
 @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
 def edit_event(event_id):
@@ -87,10 +86,10 @@ def bulk_delete_events():
 def duplicate_event(event_id):
     original_event = Event.query.get_or_404(event_id)
     new_event = Event(
-        name=f"Copy of {original_event.name}",
-        date=original_event.date + timedelta(days=1),  # Set the date to the next day
+        name=f'Copy of {original_event.name}',
+        date=original_event.date,
         time=original_event.time
     )
     db.session.add(new_event)
     db.session.commit()
-    return jsonify({"success": True, "message": "Event duplicated successfully"}), 200
+    return jsonify({'success': True, 'message': 'Event duplicated successfully'}), 200
