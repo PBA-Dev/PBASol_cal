@@ -18,6 +18,16 @@
         <label for="time" class="form-label">Time</label>
         <input type="time" class="form-control" id="time" name="time" value="{{ event.time.strftime('%H:%M') }}" required>
     </div>
+    <div class="mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select class="form-select" id="category" name="category">
+            <option value="default" {% if event.category == 'default' %}selected{% endif %}>Default</option>
+            <option value="work" {% if event.category == 'work' %}selected{% endif %}>Work</option>
+            <option value="personal" {% if event.category == 'personal' %}selected{% endif %}>Personal</option>
+            <option value="family" {% if event.category == 'family' %}selected{% endif %}>Family</option>
+            <option value="holiday" {% if event.category == 'holiday' %}selected{% endif %}>Holiday</option>
+        </select>
+    </div>
     <div class="mb-3 form-check">
         <input type="checkbox" class="form-check-input" id="is_recurring" name="is_recurring" {% if event.is_recurring %}checked{% endif %}>
         <label class="form-check-label" for="is_recurring">Recurring Event</label>

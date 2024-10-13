@@ -12,6 +12,7 @@ class Event(db.Model):
     recurrence_type = db.Column(db.String(20))  # 'daily', 'weekly', 'monthly', 'yearly', 'custom'
     recurrence_end_date = db.Column(db.Date)
     custom_recurrence_dates = db.Column(ARRAY(db.Date))
+    category = db.Column(db.String(50), default='default')  # New field for event category
 
     def __repr__(self):
         return f'<Event {self.name}>'
@@ -25,5 +26,6 @@ class Event(db.Model):
             'is_recurring': self.is_recurring,
             'recurrence_type': self.recurrence_type,
             'recurrence_end_date': self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
-            'custom_recurrence_dates': [date.isoformat() for date in self.custom_recurrence_dates] if self.custom_recurrence_dates else None
+            'custom_recurrence_dates': [date.isoformat() for date in self.custom_recurrence_dates] if self.custom_recurrence_dates else None,
+            'category': self.category
         }

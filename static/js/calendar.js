@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const dateEvents = events[date].filter(event => event.time === cellTime);
                 
                 if (dateEvents.length > 0) {
-                    cell.classList.add('bg-primary', 'text-white');
+                    cell.classList.add('event-category-' + (dateEvents[0].category || 'default'));
                     cell.style.cursor = 'pointer';
                     if (dateEvents.length > 1) {
                         cell.classList.add('multiple-events');
@@ -287,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="event-item">
                 <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
                 <p><strong>Zeit:</strong> ${event.time}</p>
+                <p><strong>Category:</strong> ${event.category || 'Default'}</p>
                 ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${getRecurrenceTypeText(event.recurrence_type)}</p>` : ''}
             </div>
         `).join('');

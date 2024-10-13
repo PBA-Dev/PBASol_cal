@@ -20,6 +20,7 @@ def add_event():
             recurrence_type = request.form.get('recurrence_type')
             recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
             custom_recurrence_dates = request.form.get('custom_recurrence_dates')
+            category = request.form.get('category', 'default')
 
             new_event = Event(
                 name=name,
@@ -27,7 +28,8 @@ def add_event():
                 time=time,
                 is_recurring=is_recurring,
                 recurrence_type=recurrence_type,
-                recurrence_end_date=recurrence_end_date
+                recurrence_end_date=recurrence_end_date,
+                category=category
             )
 
             if custom_recurrence_dates:
@@ -61,7 +63,8 @@ def create_recurring_events(event):
                     date=custom_date,
                     time=event.time,
                     is_recurring=True,
-                    recurrence_type='custom'
+                    recurrence_type='custom',
+                    category=event.category
                 )
                 db.session.add(recurring_event)
     else:
@@ -74,7 +77,8 @@ def create_recurring_events(event):
                     time=event.time,
                     is_recurring=True,
                     recurrence_type=event.recurrence_type,
-                    recurrence_end_date=event.recurrence_end_date
+                    recurrence_end_date=event.recurrence_end_date,
+                    category=event.category
                 )
                 db.session.add(recurring_event)
 
@@ -128,7 +132,8 @@ def get_events():
                 'name': event.name,
                 'time': event.time.strftime('%H:%M'),
                 'is_recurring': event.is_recurring,
-                'recurrence_type': event.recurrence_type
+                'recurrence_type': event.recurrence_type,
+                'category': event.category
             })
 
     return jsonify(events_by_date)
@@ -179,6 +184,7 @@ def edit_event(event_id):
             event.is_recurring = 'is_recurring' in request.form
             event.recurrence_type = request.form.get('recurrence_type')
             event.recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+            event.category = request.form.get('category', 'default')
             custom_recurrence_dates = request.form.get('custom_recurrence_dates')
             
             if custom_recurrence_dates:
@@ -230,7 +236,8 @@ def duplicate_event(event_id):
         is_recurring=original_event.is_recurring,
         recurrence_type=original_event.recurrence_type,
         recurrence_end_date=original_event.recurrence_end_date,
-        custom_recurrence_dates=original_event.custom_recurrence_dates
+        custom_recurrence_dates=original_event.custom_recurrence_dates,
+        category=original_event.category
     )
     db.session.add(new_event)
     db.session.commit()

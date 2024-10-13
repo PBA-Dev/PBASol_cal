@@ -51,6 +51,32 @@
     border-bottom: none;
 }
 
+/* Event category colors */
+.event-category-default {
+    background-color: var(--bs-primary) !important;
+    color: var(--bs-white) !important;
+}
+
+.event-category-work {
+    background-color: var(--bs-success) !important;
+    color: var(--bs-white) !important;
+}
+
+.event-category-personal {
+    background-color: var(--bs-info) !important;
+    color: var(--bs-white) !important;
+}
+
+.event-category-family {
+    background-color: var(--bs-warning) !important;
+    color: var(--bs-dark) !important;
+}
+
+.event-category-holiday {
+    background-color: var(--bs-danger) !important;
+    color: var(--bs-white) !important;
+}
+
 @media (max-width: 768px) {
     .table td {
         height: 30px;
