@@ -77,6 +77,31 @@
     color: var(--bs-white) !important;
 }
 
+/* Embedded calendar styles */
+.embedded-calendar {
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.embedded-calendar .table {
+    font-size: 0.9rem;
+}
+
+.embedded-calendar .table td {
+    height: 30px;
+    width: 30px;
+}
+
+.embedded-calendar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.embedded-calendar .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
 @media (max-width: 768px) {
     .table td {
         height: 30px;

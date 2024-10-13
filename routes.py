@@ -166,7 +166,9 @@ def generate_recurring_dates(event, start_date, end_date):
 @app.route('/embed')
 def embed():
     view = request.args.get('view', 'month')
-    return render_template('embed.html', embedded=True, view=view)
+    embed_url = request.url_root + 'embed'
+    iframe_code = f'<iframe src="{embed_url}" width="100%" height="600" frameborder="0"></iframe>'
+    return render_template('embed.html', embedded=True, view=view, iframe_code=iframe_code)
 
 @app.route('/manage_events')
 def manage_events():
