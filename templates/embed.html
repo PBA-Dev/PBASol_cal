@@ -22,5 +22,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    window.preloadedEvents = JSON.parse('{{ events | tojson | safe }}');
+</script>
 <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
 {% endblock %}
