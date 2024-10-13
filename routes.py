@@ -24,13 +24,18 @@ def add_event():
 
 @app.route('/events')
 def get_events():
-    events = Event.query.all()
-    return jsonify([{
-        'id': event.id,
-        'name': event.name,
-        'date': event.date.strftime('%Y-%m-%d'),
-        'time': event.time.strftime('%H:%M')
-    } for event in events])
+    events = Event.query.order_by(Event.date, Event.time).all()
+    events_by_date = {}
+    for event in events:
+        date_str = event.date.strftime('%Y-%m-%d')
+        if date_str not in events_by_date:
+            events_by_date[date_str] = []
+        events_by_date[date_str].append({
+            'id': event.id,
+            'name': event.name,
+            'time': event.time.strftime('%H:%M')
+        })
+    return jsonify(events_by_date)
 
 @app.route('/embed')
 def embed():

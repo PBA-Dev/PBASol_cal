@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
+    let events = {};
     
     // Function to create a month element
     function createMonthElement(date) {
@@ -102,14 +103,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 return response.json();
             })
-            .then(events => {
-                console.log(`Received ${events.length} events`);
-                events.forEach(event => {
-                    const cell = document.querySelector(`td[data-date="${event.date}"]`);
+            .then(fetchedEvents => {
+                console.log(`Received events for ${Object.keys(fetchedEvents).length} dates`);
+                events = fetchedEvents;
+                Object.keys(events).forEach(date => {
+                    const cell = document.querySelector(`td[data-date="${date}"]`);
                     if (cell) {
                         cell.classList.add('bg-primary', 'text-white');
                         cell.style.cursor = 'pointer';
-                        cell.addEventListener('click', () => showEventDetails(event));
+                        if (events[date].length > 1) {
+                            cell.classList.add('multiple-events');
+                        }
+                        cell.addEventListener('click', () => showEventDetails(date));
                     }
                 });
             })
@@ -119,11 +124,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    function showEventDetails(event) {
+    function showEventDetails(date) {
+        const dateEvents = events[date] || [];
+        const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy', { locale: dateFns.de });
+        let eventsList = dateEvents.map(event => `
+            <div class="event-item">
+                <h5>${event.name}</h5>
+                <p><strong>Zeit:</strong> ${event.time}</p>
+            </div>
+        `).join('');
+        
         eventModalBody.innerHTML = `
-            <p><strong>Event:</strong> ${event.name}</p>
-            <p><strong>Datum:</strong> ${dateFns.format(new Date(event.date), 'dd.MM.yyyy', { locale: dateFns.de })}</p>
-            <p><strong>Zeit:</strong> ${dateFns.format(new Date(`${event.date}T${event.time}`), 'HH:mm', { locale: dateFns.de })}</p>
+            <h4>${formattedDate}</h4>
+            ${eventsList || '<p>Keine Ereignisse für diesen Tag.</p>'}
         `;
         eventModal.show();
     }
