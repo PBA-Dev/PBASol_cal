@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentDate = new Date();
     let events = {};
     
+    // Check if the calendar is in embedded mode
+    const isEmbedded = document.body.classList.contains('embedded');
+    
     // Function to create a month element
     function createMonthElement(date) {
         console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de })}`);
@@ -75,23 +78,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Create pagination controls
-    const paginationControls = document.createElement('div');
-    paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
-    paginationControls.innerHTML = `
-        <button id="prevMonth" class="btn btn-secondary">&lt; Vorheriger Monat</button>
-        <button id="nextMonth" class="btn btn-secondary">Nächster Monat &gt;</button>
-    `;
-    calendarEl.parentNode.insertBefore(paginationControls, calendarEl);
-    
-    document.getElementById('prevMonth').addEventListener('click', () => {
-        currentDate = dateFns.subMonths(currentDate, 1);
-        updateCalendar();
-    });
-    
-    document.getElementById('nextMonth').addEventListener('click', () => {
-        currentDate = dateFns.addMonths(currentDate, 1);
-        updateCalendar();
-    });
+    if (!isEmbedded) {
+        const paginationControls = document.createElement('div');
+        paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
+        paginationControls.innerHTML = `
+            <button id="prevMonth" class="btn btn-secondary">&lt; Vorheriger Monat</button>
+            <button id="nextMonth" class="btn btn-secondary">Nächster Monat &gt;</button>
+        `;
+        calendarEl.parentNode.insertBefore(paginationControls, calendarEl);
+        
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentDate = dateFns.subMonths(currentDate, 1);
+            updateCalendar();
+        });
+        
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentDate = dateFns.addMonths(currentDate, 1);
+            updateCalendar();
+        });
+    }
     
     // Fetch and display events
     function fetchAndDisplayEvents() {
@@ -137,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="event-item">
                 <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
                 <p><strong>Zeit:</strong> ${event.time}</p>
-                ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${event.recurrence_type}</p>` : ''}
+                ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${getRecurrenceTypeText(event.recurrence_type)}</p>` : ''}
             </div>
         `).join('');
         
@@ -146,6 +151,23 @@ document.addEventListener('DOMContentLoaded', function() {
             ${eventsList || '<p>Keine Ereignisse für diesen Tag.</p>'}
         `;
         eventModal.show();
+    }
+    
+    function getRecurrenceTypeText(recurrenceType) {
+        switch (recurrenceType) {
+            case 'daily':
+                return 'Daily';
+            case 'weekly':
+                return 'Weekly';
+            case 'monthly':
+                return 'Monthly';
+            case 'yearly':
+                return 'Yearly';
+            case 'custom':
+                return 'Custom';
+            default:
+                return 'Unknown';
+        }
     }
     
     // Initialize the calendar

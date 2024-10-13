@@ -38,7 +38,7 @@ def add_event():
             db.session.add(new_event)
             db.session.commit()
 
-            if is_recurring and recurrence_type != 'custom':
+            if is_recurring:
                 create_recurring_events(new_event)
 
             flash('Event added successfully', 'success')
@@ -49,29 +49,46 @@ def add_event():
     return render_template('add_event.html')
 
 def create_recurring_events(event):
-    current_date = event.date
-    while current_date <= event.recurrence_end_date:
-        if current_date != event.date:  # Skip the original event
-            recurring_event = Event(
-                name=event.name,
-                date=current_date,
-                time=event.time,
-                is_recurring=True,
-                recurrence_type=event.recurrence_type,
-                recurrence_end_date=event.recurrence_end_date
-            )
-            db.session.add(recurring_event)
+    if not event.is_recurring or not event.recurrence_type:
+        return
 
-        if event.recurrence_type == 'daily':
-            current_date += timedelta(days=1)
-        elif event.recurrence_type == 'weekly':
-            current_date += timedelta(weeks=1)
-        elif event.recurrence_type == 'monthly':
-            current_date = current_date.replace(month=current_date.month % 12 + 1)
-            if current_date.month == 1:
-                current_date = current_date.replace(year=current_date.year + 1)
-        elif event.recurrence_type == 'yearly':
-            current_date = current_date.replace(year=current_date.year + 1)
+    if event.recurrence_type == 'custom':
+        for custom_date in event.custom_recurrence_dates:
+            if custom_date != event.date:
+                recurring_event = Event(
+                    name=event.name,
+                    date=custom_date,
+                    time=event.time,
+                    is_recurring=True,
+                    recurrence_type='custom'
+                )
+                db.session.add(recurring_event)
+    else:
+        current_date = event.date
+        while current_date <= event.recurrence_end_date:
+            if current_date != event.date:
+                recurring_event = Event(
+                    name=event.name,
+                    date=current_date,
+                    time=event.time,
+                    is_recurring=True,
+                    recurrence_type=event.recurrence_type,
+                    recurrence_end_date=event.recurrence_end_date
+                )
+                db.session.add(recurring_event)
+
+            if event.recurrence_type == 'daily':
+                current_date += timedelta(days=1)
+            elif event.recurrence_type == 'weekly':
+                current_date += timedelta(weeks=1)
+            elif event.recurrence_type == 'monthly':
+                next_month = current_date.replace(day=1) + timedelta(days=32)
+                current_date = next_month.replace(day=min(current_date.day, (next_month.replace(day=1) - timedelta(days=1)).day))
+            elif event.recurrence_type == 'yearly':
+                try:
+                    current_date = current_date.replace(year=current_date.year + 1)
+                except ValueError:  # Handle leap year
+                    current_date = current_date.replace(year=current_date.year + 1, day=28)
 
     db.session.commit()
 
@@ -130,17 +147,19 @@ def generate_recurring_dates(event, start_date, end_date):
         elif event.recurrence_type == 'weekly':
             current_date += timedelta(weeks=1)
         elif event.recurrence_type == 'monthly':
-            current_date = current_date.replace(month=current_date.month % 12 + 1)
-            if current_date.month == 1:
-                current_date = current_date.replace(year=current_date.year + 1)
+            next_month = current_date.replace(day=1) + timedelta(days=32)
+            current_date = next_month.replace(day=min(current_date.day, (next_month.replace(day=1) - timedelta(days=1)).day))
         elif event.recurrence_type == 'yearly':
-            current_date = current_date.replace(year=current_date.year + 1)
+            try:
+                current_date = current_date.replace(year=current_date.year + 1)
+            except ValueError:  # Handle leap year
+                current_date = current_date.replace(year=current_date.year + 1, day=28)
 
     return dates
 
 @app.route('/embed')
 def embed():
-    return render_template('embed.html')
+    return render_template('embed.html', embedded=True)
 
 @app.route('/manage_events')
 def manage_events():
