@@ -11,33 +11,40 @@ def index():
 @app.route('/add_event', methods=['GET', 'POST'])
 def add_event():
     if request.method == 'POST':
-        name = request.form['name']
-        date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-        time = datetime.strptime(request.form['time'], '%H:%M').time()
-        is_recurring = 'is_recurring' in request.form
-        recurrence_type = request.form.get('recurrence_type')
-        recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
-        custom_recurrence_dates = request.form.get('custom_recurrence_dates')
+        try:
+            name = request.form['name']
+            date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+            time = datetime.strptime(request.form['time'], '%H:%M').time()
+            is_recurring = 'is_recurring' in request.form
+            recurrence_type = request.form.get('recurrence_type')
+            recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+            custom_recurrence_dates = request.form.get('custom_recurrence_dates')
 
-        new_event = Event(
-            name=name,
-            date=date,
-            time=time,
-            is_recurring=is_recurring,
-            recurrence_type=recurrence_type,
-            recurrence_end_date=recurrence_end_date
-        )
+            new_event = Event(
+                name=name,
+                date=date,
+                time=time,
+                is_recurring=is_recurring,
+                recurrence_type=recurrence_type,
+                recurrence_end_date=recurrence_end_date
+            )
 
-        if custom_recurrence_dates:
-            new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in custom_recurrence_dates.split(',')]
+            if custom_recurrence_dates:
+                date_strings = [date_str.strip() for date_str in custom_recurrence_dates.split(',')]
+                if len(date_strings) > 50:
+                    raise ValueError("Too many custom recurrence dates. Maximum allowed is 50.")
+                new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in date_strings]
 
-        db.session.add(new_event)
-        db.session.commit()
+            db.session.add(new_event)
+            db.session.commit()
 
-        if is_recurring and recurrence_type != 'custom':
-            create_recurring_events(new_event)
+            if is_recurring and recurrence_type != 'custom':
+                create_recurring_events(new_event)
 
-        return redirect(url_for('index'))
+            flash('Event added successfully', 'success')
+            return redirect(url_for('index'))
+        except ValueError as e:
+            flash(f'Error adding event: {str(e)}', 'danger')
     
     return render_template('add_event.html')
 
@@ -144,21 +151,28 @@ def manage_events():
 def edit_event(event_id):
     event = Event.query.get_or_404(event_id)
     if request.method == 'POST':
-        event.name = request.form['name']
-        event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-        event.time = datetime.strptime(request.form['time'], '%H:%M').time()
-        event.is_recurring = 'is_recurring' in request.form
-        event.recurrence_type = request.form.get('recurrence_type')
-        event.recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
-        custom_recurrence_dates = request.form.get('custom_recurrence_dates')
-        
-        if custom_recurrence_dates:
-            event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in custom_recurrence_dates.split(',')]
-        else:
-            event.custom_recurrence_dates = None
+        try:
+            event.name = request.form['name']
+            event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+            event.time = datetime.strptime(request.form['time'], '%H:%M').time()
+            event.is_recurring = 'is_recurring' in request.form
+            event.recurrence_type = request.form.get('recurrence_type')
+            event.recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+            custom_recurrence_dates = request.form.get('custom_recurrence_dates')
+            
+            if custom_recurrence_dates:
+                date_strings = [date_str.strip() for date_str in custom_recurrence_dates.split(',')]
+                if len(date_strings) > 50:
+                    raise ValueError("Too many custom recurrence dates. Maximum allowed is 50.")
+                event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in date_strings]
+            else:
+                event.custom_recurrence_dates = None
 
-        db.session.commit()
-        return redirect(url_for('manage_events'))
+            db.session.commit()
+            flash('Event updated successfully', 'success')
+            return redirect(url_for('manage_events'))
+        except ValueError as e:
+            flash(f'Error updating event: {str(e)}', 'danger')
     return render_template('edit_event.html', event=event)
 
 @app.route('/delete_event/<int:event_id>', methods=['POST'])

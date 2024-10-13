@@ -38,8 +38,9 @@
             <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date" value="{{ event.recurrence_end_date.strftime('%Y-%m-%d') if event.recurrence_end_date else '' }}">
         </div>
         <div class="mb-3" id="custom_recurrence_dates_container" style="display: {% if event.recurrence_type == 'custom' %}block{% else %}none{% endif %};">
-            <label for="custom_recurrence_dates" class="form-label">Custom Recurrence Dates</label>
+            <label for="custom_recurrence_dates" class="form-label">Custom Recurrence Dates (max 50)</label>
             <input type="text" class="form-control" id="custom_recurrence_dates" name="custom_recurrence_dates" value="{{ event.custom_recurrence_dates|join(', ') if event.custom_recurrence_dates else '' }}">
+            <small class="form-text text-muted">Enter dates separated by commas (YYYY-MM-DD). Maximum 50 dates.</small>
         </div>
     </div>
     <button type="submit" class="btn btn-primary">Update Event</button>
