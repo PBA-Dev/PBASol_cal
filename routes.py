@@ -87,6 +87,8 @@ def get_events():
     for event in events:
         if event.is_recurring and event.recurrence_type != 'custom':
             event_dates = generate_recurring_dates(event, start_date, end_date)
+            if not event_dates:
+                continue  # Skip this event if there are no valid dates
         elif event.is_recurring and event.recurrence_type == 'custom':
             event_dates = [date for date in event.custom_recurrence_dates if start_date <= date <= end_date]
         else:
@@ -107,6 +109,9 @@ def get_events():
     return jsonify(events_by_date)
 
 def generate_recurring_dates(event, start_date, end_date):
+    if event.date is None or start_date is None or end_date is None:
+        return []  # Return an empty list if any of the required dates are None
+
     dates = []
     current_date = max(event.date, start_date)
     end_date = min(event.recurrence_end_date or end_date, end_date)
