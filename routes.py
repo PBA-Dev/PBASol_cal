@@ -25,7 +25,12 @@ def add_event():
 @app.route('/events')
 def get_events():
     events = Event.query.all()
-    return jsonify([event.to_dict() for event in events])
+    return jsonify([{
+        'id': event.id,
+        'name': event.name,
+        'date': event.date.strftime('%Y-%m-%d'),
+        'time': event.time.strftime('%H:%M')
+    } for event in events])
 
 @app.route('/embed')
 def embed():

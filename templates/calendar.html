@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Calendar{% endblock %}
+{% block title %}Kalender{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">12-Month Calendar</h1>
+<h1 class="mb-4">Monatskalender</h1>
 <div id="calendar" class="row"></div>
 
 <!-- Event Details Modal -->
@@ -11,8 +11,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="eventModalLabel">Ereignisdetails</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body" id="eventModalBody">
                 <!-- Event details will be inserted here -->
