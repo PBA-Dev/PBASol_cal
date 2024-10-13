@@ -83,21 +83,22 @@ def get_events():
     if start_date and end_date:
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-        events = Event.query.filter(
-            ((Event.date >= start_date) & (Event.date <= end_date)) |
-            (Event.is_recurring == True)
-        ).order_by(Event.date, Event.time).all()
     else:
-        events = Event.query.order_by(Event.date, Event.time).all()
+        # If start_date or end_date is not provided, use a default range
+        start_date = datetime.now().date()
+        end_date = start_date + timedelta(days=30)  # Show events for the next 30 days by default
+
+    events = Event.query.filter(
+        ((Event.date >= start_date) & (Event.date <= end_date)) |
+        (Event.is_recurring == True)
+    ).order_by(Event.date, Event.time).all()
 
     events_by_date = {}
     for event in events:
         if event.is_recurring and event.recurrence_type != 'custom':
             event_dates = generate_recurring_dates(event, start_date, end_date)
-            if not event_dates:
-                continue  # Skip this event if there are no valid dates
         elif event.is_recurring and event.recurrence_type == 'custom':
-            event_dates = [date for date in event.custom_recurrence_dates if start_date <= date <= end_date]
+            event_dates = [date for date in event.custom_recurrence_dates if date and start_date <= date <= end_date]
         else:
             event_dates = [event.date]
 
@@ -116,8 +117,8 @@ def get_events():
     return jsonify(events_by_date)
 
 def generate_recurring_dates(event, start_date, end_date):
-    if event.date is None or start_date is None or end_date is None:
-        return []  # Return an empty list if any of the required dates are None
+    if not event.date or not start_date or not end_date:
+        return []
 
     dates = []
     current_date = max(event.date, start_date)
