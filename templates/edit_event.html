@@ -18,7 +18,39 @@
         <label for="time" class="form-label">Time</label>
         <input type="time" class="form-control" id="time" name="time" value="{{ event.time.strftime('%H:%M') }}" required>
     </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="is_recurring" name="is_recurring" {% if event.is_recurring %}checked{% endif %}>
+        <label class="form-check-label" for="is_recurring">Recurring Event</label>
+    </div>
+    <div id="recurring_options" style="display: {% if event.is_recurring %}block{% else %}none{% endif %};">
+        <div class="mb-3">
+            <label for="recurrence_type" class="form-label">Recurrence Type</label>
+            <select class="form-select" id="recurrence_type" name="recurrence_type">
+                <option value="daily" {% if event.recurrence_type == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly" {% if event.recurrence_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if event.recurrence_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                <option value="yearly" {% if event.recurrence_type == 'yearly' %}selected{% endif %}>Yearly</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="recurrence_end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date" value="{{ event.recurrence_end_date.strftime('%Y-%m-%d') if event.recurrence_end_date else '' }}">
+        </div>
+    </div>
     <button type="submit" class="btn btn-primary">Update Event</button>
     <a href="{{ url_for('manage_events') }}" class="btn btn-secondary">Cancel</a>
 </form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const isRecurringCheckbox = document.getElementById('is_recurring');
+    const recurringOptions = document.getElementById('recurring_options');
+
+    isRecurringCheckbox.addEventListener('change', function() {
+        recurringOptions.style.display = this.checked ? 'block' : 'none';
+    });
+});
+</script>
 {% endblock %}

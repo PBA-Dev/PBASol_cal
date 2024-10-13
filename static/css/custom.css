@@ -26,6 +26,19 @@
     line-height: 1;
 }
 
+.table td.recurring-event {
+    position: relative;
+}
+
+.table td.recurring-event::before {
+    content: '↻';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    line-height: 1;
+}
+
 .event-item {
     margin-bottom: 15px;
     padding-bottom: 15px;

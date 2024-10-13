@@ -18,6 +18,25 @@
         <label for="time" class="form-label">Time</label>
         <input type="time" class="form-control" id="time" name="time" required>
     </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="is_recurring" name="is_recurring">
+        <label class="form-check-label" for="is_recurring">Recurring Event</label>
+    </div>
+    <div id="recurring_options" style="display: none;">
+        <div class="mb-3">
+            <label for="recurrence_type" class="form-label">Recurrence Type</label>
+            <select class="form-select" id="recurrence_type" name="recurrence_type">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="recurrence_end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date">
+        </div>
+    </div>
     <button type="submit" class="btn btn-primary">Add Event</button>
 </form>
 {% endblock %}
@@ -26,6 +45,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const addEventForm = document.getElementById('addEventForm');
+    const isRecurringCheckbox = document.getElementById('is_recurring');
+    const recurringOptions = document.getElementById('recurring_options');
+
+    isRecurringCheckbox.addEventListener('change', function() {
+        recurringOptions.style.display = this.checked ? 'block' : 'none';
+    });
 
     addEventForm.addEventListener('submit', function(e) {
         e.preventDefault();

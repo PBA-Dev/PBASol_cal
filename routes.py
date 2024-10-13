@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash
 from app import app, db
 from models import Event
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 
 @app.route('/')
@@ -14,14 +14,54 @@ def add_event():
         name = request.form['name']
         date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         time = datetime.strptime(request.form['time'], '%H:%M').time()
-        
-        new_event = Event(name=name, date=date, time=time)
+        is_recurring = 'is_recurring' in request.form
+        recurrence_type = request.form.get('recurrence_type')
+        recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+
+        new_event = Event(
+            name=name,
+            date=date,
+            time=time,
+            is_recurring=is_recurring,
+            recurrence_type=recurrence_type,
+            recurrence_end_date=recurrence_end_date
+        )
         db.session.add(new_event)
         db.session.commit()
-        
+
+        if is_recurring and recurrence_end_date:
+            create_recurring_events(new_event)
+
         return redirect(url_for('index'))
     
     return render_template('add_event.html')
+
+def create_recurring_events(event):
+    current_date = event.date
+    while current_date <= event.recurrence_end_date:
+        if current_date != event.date:  # Skip the original event
+            recurring_event = Event(
+                name=event.name,
+                date=current_date,
+                time=event.time,
+                is_recurring=True,
+                recurrence_type=event.recurrence_type,
+                recurrence_end_date=event.recurrence_end_date
+            )
+            db.session.add(recurring_event)
+
+        if event.recurrence_type == 'daily':
+            current_date += timedelta(days=1)
+        elif event.recurrence_type == 'weekly':
+            current_date += timedelta(weeks=1)
+        elif event.recurrence_type == 'monthly':
+            current_date = current_date.replace(month=current_date.month % 12 + 1)
+            if current_date.month == 1:
+                current_date = current_date.replace(year=current_date.year + 1)
+        elif event.recurrence_type == 'yearly':
+            current_date = current_date.replace(year=current_date.year + 1)
+
+    db.session.commit()
 
 @app.route('/events')
 def get_events():
@@ -34,7 +74,9 @@ def get_events():
         events_by_date[date_str].append({
             'id': event.id,
             'name': event.name,
-            'time': event.time.strftime('%H:%M')
+            'time': event.time.strftime('%H:%M'),
+            'is_recurring': event.is_recurring,
+            'recurrence_type': event.recurrence_type
         })
     return jsonify(events_by_date)
 
@@ -54,6 +96,9 @@ def edit_event(event_id):
         event.name = request.form['name']
         event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         event.time = datetime.strptime(request.form['time'], '%H:%M').time()
+        event.is_recurring = 'is_recurring' in request.form
+        event.recurrence_type = request.form.get('recurrence_type')
+        event.recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
         db.session.commit()
         return redirect(url_for('manage_events'))
     return render_template('edit_event.html', event=event)
@@ -88,7 +133,10 @@ def duplicate_event(event_id):
     new_event = Event(
         name=f'Copy of {original_event.name}',
         date=original_event.date,
-        time=original_event.time
+        time=original_event.time,
+        is_recurring=original_event.is_recurring,
+        recurrence_type=original_event.recurrence_type,
+        recurrence_end_date=original_event.recurrence_end_date
     )
     db.session.add(new_event)
     db.session.commit()

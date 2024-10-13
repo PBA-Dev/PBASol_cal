@@ -114,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (events[date].length > 1) {
                             cell.classList.add('multiple-events');
                         }
+                        if (events[date].some(event => event.is_recurring)) {
+                            cell.classList.add('recurring-event');
+                        }
                         cell.addEventListener('click', () => showEventDetails(date));
                     }
                 });
@@ -129,8 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy', { locale: dateFns.de });
         let eventsList = dateEvents.map(event => `
             <div class="event-item">
-                <h5>${event.name}</h5>
+                <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
                 <p><strong>Zeit:</strong> ${event.time}</p>
+                ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${event.recurrence_type}</p>` : ''}
             </div>
         `).join('');
         
