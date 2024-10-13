@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('date-fns library loaded successfully');
     
     const calendarEl = document.getElementById('calendar');
+    console.log('Calendar element:', calendarEl);
+
     const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
@@ -17,19 +19,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentView = calendarEl.dataset.view || 'month';
     
     const isEmbedded = document.body.classList.contains('embedded');
+    console.log('Is embedded:', isEmbedded);
     
     function createMonthElement(date) {
-        console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de })}`);
+        console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
         const monthEl = document.createElement('div');
         monthEl.classList.add('col-12', 'mb-4');
         
-        const monthName = dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de });
+        const monthName = dateFns.format(date, 'MMMM yyyy');
         monthEl.innerHTML = `
             <h3>${monthName}</h3>
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>So</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th><th>Sa</th>
+                        <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         while (dateFns.getMonth(currentDay) === dateFns.getMonth(date)) {
             const dayCell = document.createElement('td');
-            dayCell.textContent = dateFns.format(currentDay, 'dd');
+            dayCell.textContent = dateFns.format(currentDay, 'd');
             dayCell.dataset.date = dateFns.format(currentDay, 'yyyy-MM-dd');
             weekRow.appendChild(dayCell);
             
@@ -64,17 +67,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         tbody.appendChild(weekRow);
         
+        console.log('Month element created:', monthEl);
         return monthEl;
     }
     
     function updateCalendar() {
+        console.log('Updating calendar');
         calendarEl.innerHTML = '';
         let startDate, endDate;
         
-        calendarEl.appendChild(createMonthElement(currentDate));
+        const monthElement = createMonthElement(currentDate);
+        console.log('Month element created, appending to calendar');
+        calendarEl.appendChild(monthElement);
         startDate = dateFns.startOfMonth(currentDate);
         endDate = dateFns.endOfMonth(currentDate);
         
+        console.log('Fetching events for:', startDate, 'to', endDate);
         fetchAndDisplayEvents(startDate, endDate);
     }
     
@@ -114,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`)
             .then(response => {
+                console.log('Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -131,8 +140,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function displayEvents() {
+        console.log('Displaying events');
         Object.keys(events).forEach(date => {
             const cells = document.querySelectorAll(`td[data-date="${date}"]`);
+            console.log(`Found ${cells.length} cells for date ${date}`);
             cells.forEach(cell => {
                 const dateEvents = events[date];
                 
@@ -153,17 +164,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+        console.log('Events displayed');
     }
     
     function showEventDetails(date) {
         if (isEmbedded) return;
         
         const dateEvents = events[date] || [];
-        const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy', { locale: dateFns.de });
+        const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy');
         let eventsList = dateEvents.map(event => `
             <div class="event-item">
                 <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
-                <p><strong>Zeit:</strong> ${event.time}</p>
+                <p><strong>Time:</strong> ${event.time}</p>
                 <p><strong>Category:</strong> ${event.category || 'Default'}</p>
                 ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${getRecurrenceTypeText(event.recurrence_type)}</p>` : ''}
             </div>
@@ -171,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         eventModalBody.innerHTML = `
             <h4>${formattedDate}</h4>
-            ${eventsList || '<p>Keine Ereignisse für diesen Zeitpunkt.</p>'}
+            ${eventsList || '<p>No events for this date.</p>'}
         `;
         eventModal.show();
     }
@@ -193,5 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    console.log('Initializing calendar');
     updateCalendar();
 });

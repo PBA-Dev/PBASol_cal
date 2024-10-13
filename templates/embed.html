@@ -4,7 +4,10 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div id="calendar" class="row embedded-calendar" data-view="{{ view }}"></div>
+    <div id="calendar" class="row embedded-calendar" data-view="{{ view }}" style="min-height: 600px;">
+        <h2>Calendar Loading...</h2>
+        <p>If you can see this message, the HTML structure is working correctly.</p>
+    </div>
 </div>
 {% if not embedded %}
 <div class="mt-4">
@@ -16,8 +19,12 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/date-fns@4.1.0/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
 <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 {% endblock %}
 
 {% block body_class %}embedded{% endblock %}
