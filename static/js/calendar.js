@@ -96,7 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch and display events
     function fetchAndDisplayEvents() {
         console.log('Fetching events');
-        fetch('/events')
+        const startDate = dateFns.startOfMonth(currentDate);
+        const endDate = dateFns.endOfMonth(currentDate);
+        
+        fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

@@ -84,9 +84,8 @@ def get_events():
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
     else:
-        # If start_date or end_date is not provided, use a default range
         start_date = datetime.now().date()
-        end_date = start_date + timedelta(days=30)  # Show events for the next 30 days by default
+        end_date = start_date + timedelta(days=30)
 
     events = Event.query.filter(
         ((Event.date >= start_date) & (Event.date <= end_date)) |
