@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
     let events = {};
+    let currentView = 'month'; // Add this line to keep track of the current view
     
     // Check if the calendar is in embedded mode
     const isEmbedded = document.body.classList.contains('embedded');
@@ -70,11 +71,137 @@ document.addEventListener('DOMContentLoaded', function() {
         return monthEl;
     }
     
+    // Function to create a week element
+    function createWeekElement(date) {
+        console.log(`Creating week element for ${dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de })}`);
+        const weekEl = document.createElement('div');
+        weekEl.classList.add('col-12', 'mb-4');
+        
+        const weekStart = dateFns.startOfWeek(date, { weekStartsOn: 1 });
+        const weekEnd = dateFns.endOfWeek(date, { weekStartsOn: 1 });
+        const weekName = `${dateFns.format(weekStart, 'dd.MM.yyyy')} - ${dateFns.format(weekEnd, 'dd.MM.yyyy')}`;
+        
+        weekEl.innerHTML = `
+            <h3>${weekName}</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th><th>Sa</th><th>So</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        `;
+        
+        const tbody = weekEl.querySelector('tbody');
+        for (let hour = 0; hour < 24; hour++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${hour.toString().padStart(2, '0')}:00</td>`;
+            
+            for (let day = 0; day < 7; day++) {
+                const cell = document.createElement('td');
+                const cellDate = dateFns.addDays(weekStart, day);
+                cell.dataset.date = dateFns.format(cellDate, 'yyyy-MM-dd');
+                cell.dataset.time = `${hour.toString().padStart(2, '0')}:00`;
+                row.appendChild(cell);
+            }
+            
+            tbody.appendChild(row);
+        }
+        
+        return weekEl;
+    }
+    
+    // Function to create a day element
+    function createDayElement(date) {
+        console.log(`Creating day element for ${dateFns.format(date, 'MMMM dd, yyyy', { locale: dateFns.de })}`);
+        const dayEl = document.createElement('div');
+        dayEl.classList.add('col-12', 'mb-4');
+        
+        const dayName = dateFns.format(date, 'EEEE, MMMM dd, yyyy', { locale: dateFns.de });
+        
+        dayEl.innerHTML = `
+            <h3>${dayName}</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Events</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        `;
+        
+        const tbody = dayEl.querySelector('tbody');
+        for (let hour = 0; hour < 24; hour++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${hour.toString().padStart(2, '0')}:00</td>
+                <td data-date="${dateFns.format(date, 'yyyy-MM-dd')}" data-time="${hour.toString().padStart(2, '0')}:00"></td>
+            `;
+            tbody.appendChild(row);
+        }
+        
+        return dayEl;
+    }
+    
     // Function to update the calendar
     function updateCalendar() {
         calendarEl.innerHTML = '';
-        calendarEl.appendChild(createMonthElement(currentDate));
-        fetchAndDisplayEvents();
+        let startDate, endDate;
+        
+        switch (currentView) {
+            case 'month':
+                calendarEl.appendChild(createMonthElement(currentDate));
+                startDate = dateFns.startOfMonth(currentDate);
+                endDate = dateFns.endOfMonth(currentDate);
+                break;
+            case 'week':
+                calendarEl.appendChild(createWeekElement(currentDate));
+                startDate = dateFns.startOfWeek(currentDate, { weekStartsOn: 1 });
+                endDate = dateFns.endOfWeek(currentDate, { weekStartsOn: 1 });
+                break;
+            case 'day':
+                calendarEl.appendChild(createDayElement(currentDate));
+                startDate = dateFns.startOfDay(currentDate);
+                endDate = dateFns.endOfDay(currentDate);
+                break;
+        }
+        
+        fetchAndDisplayEvents(startDate, endDate);
+    }
+    
+    // Create view selection buttons
+    if (!isEmbedded) {
+        const viewControls = document.createElement('div');
+        viewControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
+        viewControls.innerHTML = `
+            <div class="btn-group" role="group" aria-label="Calendar views">
+                <button id="monthView" class="btn btn-secondary">Month</button>
+                <button id="weekView" class="btn btn-secondary">Week</button>
+                <button id="dayView" class="btn btn-secondary">Day</button>
+            </div>
+        `;
+        calendarEl.parentNode.insertBefore(viewControls, calendarEl);
+        
+        document.getElementById('monthView').addEventListener('click', () => {
+            currentView = 'month';
+            updateCalendar();
+        });
+        
+        document.getElementById('weekView').addEventListener('click', () => {
+            currentView = 'week';
+            updateCalendar();
+        });
+        
+        document.getElementById('dayView').addEventListener('click', () => {
+            currentView = 'day';
+            updateCalendar();
+        });
     }
     
     // Create pagination controls
@@ -82,27 +209,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const paginationControls = document.createElement('div');
         paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
         paginationControls.innerHTML = `
-            <button id="prevMonth" class="btn btn-secondary">&lt; Vorheriger Monat</button>
-            <button id="nextMonth" class="btn btn-secondary">Nächster Monat &gt;</button>
+            <button id="prevPeriod" class="btn btn-secondary">&lt; Previous</button>
+            <button id="nextPeriod" class="btn btn-secondary">Next &gt;</button>
         `;
         calendarEl.parentNode.insertBefore(paginationControls, calendarEl);
         
-        document.getElementById('prevMonth').addEventListener('click', () => {
-            currentDate = dateFns.subMonths(currentDate, 1);
+        document.getElementById('prevPeriod').addEventListener('click', () => {
+            switch (currentView) {
+                case 'month':
+                    currentDate = dateFns.subMonths(currentDate, 1);
+                    break;
+                case 'week':
+                    currentDate = dateFns.subWeeks(currentDate, 1);
+                    break;
+                case 'day':
+                    currentDate = dateFns.subDays(currentDate, 1);
+                    break;
+            }
             updateCalendar();
         });
         
-        document.getElementById('nextMonth').addEventListener('click', () => {
-            currentDate = dateFns.addMonths(currentDate, 1);
+        document.getElementById('nextPeriod').addEventListener('click', () => {
+            switch (currentView) {
+                case 'month':
+                    currentDate = dateFns.addMonths(currentDate, 1);
+                    break;
+                case 'week':
+                    currentDate = dateFns.addWeeks(currentDate, 1);
+                    break;
+                case 'day':
+                    currentDate = dateFns.addDays(currentDate, 1);
+                    break;
+            }
             updateCalendar();
         });
     }
     
     // Fetch and display events
-    function fetchAndDisplayEvents() {
+    function fetchAndDisplayEvents(startDate, endDate) {
         console.log('Fetching events');
-        const startDate = dateFns.startOfMonth(currentDate);
-        const endDate = dateFns.endOfMonth(currentDate);
         
         fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`)
             .then(response => {
@@ -114,20 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(fetchedEvents => {
                 console.log(`Received events for ${Object.keys(fetchedEvents).length} dates`);
                 events = fetchedEvents;
-                Object.keys(events).forEach(date => {
-                    const cell = document.querySelector(`td[data-date="${date}"]`);
-                    if (cell) {
-                        cell.classList.add('bg-primary', 'text-white');
-                        cell.style.cursor = 'pointer';
-                        if (events[date].length > 1) {
-                            cell.classList.add('multiple-events');
-                        }
-                        if (events[date].some(event => event.is_recurring)) {
-                            cell.classList.add('recurring-event');
-                        }
-                        cell.addEventListener('click', () => showEventDetails(date));
-                    }
-                });
+                displayEvents();
             })
             .catch(error => {
                 console.error('Error fetching events:', error);
@@ -135,10 +267,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    function showEventDetails(date) {
+    function displayEvents() {
+        Object.keys(events).forEach(date => {
+            const cells = document.querySelectorAll(`td[data-date="${date}"]`);
+            cells.forEach(cell => {
+                const cellTime = cell.dataset.time;
+                const dateEvents = events[date].filter(event => event.time === cellTime);
+                
+                if (dateEvents.length > 0) {
+                    cell.classList.add('bg-primary', 'text-white');
+                    cell.style.cursor = 'pointer';
+                    if (dateEvents.length > 1) {
+                        cell.classList.add('multiple-events');
+                    }
+                    if (dateEvents.some(event => event.is_recurring)) {
+                        cell.classList.add('recurring-event');
+                    }
+                    cell.addEventListener('click', () => showEventDetails(date, cellTime));
+                }
+            });
+        });
+    }
+    
+    function showEventDetails(date, time) {
         const dateEvents = events[date] || [];
+        const timeEvents = time ? dateEvents.filter(event => event.time === time) : dateEvents;
         const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy', { locale: dateFns.de });
-        let eventsList = dateEvents.map(event => `
+        let eventsList = timeEvents.map(event => `
             <div class="event-item">
                 <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
                 <p><strong>Zeit:</strong> ${event.time}</p>
@@ -147,8 +302,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `).join('');
         
         eventModalBody.innerHTML = `
-            <h4>${formattedDate}</h4>
-            ${eventsList || '<p>Keine Ereignisse für diesen Tag.</p>'}
+            <h4>${formattedDate}${time ? ` ${time}` : ''}</h4>
+            ${eventsList || '<p>Keine Ereignisse für diesen Zeitpunkt.</p>'}
         `;
         eventModal.show();
     }

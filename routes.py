@@ -6,7 +6,8 @@ from flask_wtf.csrf import generate_csrf
 
 @app.route('/')
 def index():
-    return render_template('calendar.html')
+    view = request.args.get('view', 'month')
+    return render_template('calendar.html', view=view)
 
 @app.route('/add_event', methods=['GET', 'POST'])
 def add_event():
@@ -159,7 +160,8 @@ def generate_recurring_dates(event, start_date, end_date):
 
 @app.route('/embed')
 def embed():
-    return render_template('embed.html', embedded=True)
+    view = request.args.get('view', 'month')
+    return render_template('embed.html', embedded=True, view=view)
 
 @app.route('/manage_events')
 def manage_events():
