@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash
 from app import app, db
 from models import Event
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 
 @app.route('/')
@@ -82,3 +82,15 @@ def bulk_delete_events():
         flash(f'An error occurred while deleting events: {str(e)}', 'danger')
 
     return redirect(url_for('manage_events'))
+
+@app.route('/duplicate_event/<int:event_id>', methods=['POST'])
+def duplicate_event(event_id):
+    original_event = Event.query.get_or_404(event_id)
+    new_event = Event(
+        name=f"Copy of {original_event.name}",
+        date=original_event.date + timedelta(days=1),  # Set the date to the next day
+        time=original_event.time
+    )
+    db.session.add(new_event)
+    db.session.commit()
+    return jsonify({"success": True, "message": "Event duplicated successfully"}), 200
