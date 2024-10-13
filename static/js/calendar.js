@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
     let events = {};
-    let currentView = 'month';
+    let currentView = calendarEl.dataset.view || 'month';
     
     const isEmbedded = document.body.classList.contains('embedded');
     
@@ -165,7 +165,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
         
-        fetchAndDisplayEvents(startDate, endDate);
+        if (isEmbedded && window.preloadedEvents) {
+            events = JSON.parse(window.preloadedEvents);
+            displayEvents();
+        } else {
+            fetchAndDisplayEvents(startDate, endDate);
+        }
     }
     
     if (!isEmbedded) {
@@ -194,9 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentView = 'day';
             updateCalendar();
         });
-    }
-    
-    if (!isEmbedded) {
+
         const paginationControls = document.createElement('div');
         paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
         paginationControls.innerHTML = `
