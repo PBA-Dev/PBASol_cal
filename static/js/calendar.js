@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Fetching events');
     fetch('/events')
         .then(response => {
-            if (response.status !== 200) {
+            if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
