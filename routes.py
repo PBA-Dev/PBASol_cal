@@ -40,3 +40,26 @@ def get_events():
 @app.route('/embed')
 def embed():
     return render_template('embed.html')
+
+@app.route('/manage_events')
+def manage_events():
+    events = Event.query.order_by(Event.date, Event.time).all()
+    return render_template('manage_events.html', events=events)
+
+@app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+def edit_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    if request.method == 'POST':
+        event.name = request.form['name']
+        event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        event.time = datetime.strptime(request.form['time'], '%H:%M').time()
+        db.session.commit()
+        return redirect(url_for('manage_events'))
+    return render_template('edit_event.html', event=event)
+
+@app.route('/delete_event/<int:event_id>', methods=['POST'])
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    return redirect(url_for('manage_events'))
