@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event fired');
     
+    console.log('Checking for date-fns library');
     if (typeof dateFns === 'undefined') {
         console.error('date-fns library is not loaded. Please check your network connection and try refreshing the page.');
         document.getElementById('calendar').innerHTML = '<p class="text-danger">Error: Unable to load the calendar. Please check your network connection and try refreshing the page. If the problem persists, please contact support.</p>';
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     console.log('Calendar element:', calendarEl);
 
+    console.log('Initializing variables');
     const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
@@ -76,14 +78,22 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarEl.innerHTML = '';
         let startDate, endDate;
         
-        const monthElement = createMonthElement(currentDate);
-        console.log('Month element created, appending to calendar');
-        calendarEl.appendChild(monthElement);
-        startDate = dateFns.startOfMonth(currentDate);
-        endDate = dateFns.endOfMonth(currentDate);
+        console.log('Current view:', currentView);
+        console.log('Is embedded:', isEmbedded);
         
-        console.log('Fetching events for:', startDate, 'to', endDate);
-        fetchAndDisplayEvents(startDate, endDate);
+        try {
+            const monthElement = createMonthElement(currentDate);
+            console.log('Month element created:', monthElement);
+            calendarEl.appendChild(monthElement);
+            startDate = dateFns.startOfMonth(currentDate);
+            endDate = dateFns.endOfMonth(currentDate);
+            
+            console.log('Fetching events for:', startDate, 'to', endDate);
+            fetchAndDisplayEvents(startDate, endDate);
+        } catch (error) {
+            console.error('Error in updateCalendar:', error);
+            calendarEl.innerHTML = `<p class="text-danger">Error: Unable to update the calendar. Details: ${error.message}</p>`;
+        }
     }
     
     if (!isEmbedded) {
@@ -205,6 +215,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    console.log('Initializing calendar');
-    updateCalendar();
+    console.log('Before initializing calendar');
+    try {
+        console.log('Initializing calendar');
+        updateCalendar();
+    } catch (error) {
+        console.error('Error initializing calendar:', error);
+        calendarEl.innerHTML = `<p class="text-danger">Error: Unable to initialize the calendar. Details: ${error.message}</p>`;
+    }
+    console.log('After initializing calendar');
 });
