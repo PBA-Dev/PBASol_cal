@@ -17,6 +17,7 @@ def add_event():
         is_recurring = 'is_recurring' in request.form
         recurrence_type = request.form.get('recurrence_type')
         recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+        custom_recurrence_dates = request.form.get('custom_recurrence_dates')
 
         new_event = Event(
             name=name,
@@ -26,10 +27,14 @@ def add_event():
             recurrence_type=recurrence_type,
             recurrence_end_date=recurrence_end_date
         )
+
+        if custom_recurrence_dates:
+            new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in custom_recurrence_dates.split(',')]
+
         db.session.add(new_event)
         db.session.commit()
 
-        if is_recurring and recurrence_end_date:
+        if is_recurring and recurrence_type != 'custom':
             create_recurring_events(new_event)
 
         return redirect(url_for('index'))
@@ -65,20 +70,61 @@ def create_recurring_events(event):
 
 @app.route('/events')
 def get_events():
-    events = Event.query.order_by(Event.date, Event.time).all()
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if start_date and end_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        events = Event.query.filter(
+            ((Event.date >= start_date) & (Event.date <= end_date)) |
+            (Event.is_recurring == True)
+        ).order_by(Event.date, Event.time).all()
+    else:
+        events = Event.query.order_by(Event.date, Event.time).all()
+
     events_by_date = {}
     for event in events:
-        date_str = event.date.strftime('%Y-%m-%d')
-        if date_str not in events_by_date:
-            events_by_date[date_str] = []
-        events_by_date[date_str].append({
-            'id': event.id,
-            'name': event.name,
-            'time': event.time.strftime('%H:%M'),
-            'is_recurring': event.is_recurring,
-            'recurrence_type': event.recurrence_type
-        })
+        if event.is_recurring and event.recurrence_type != 'custom':
+            event_dates = generate_recurring_dates(event, start_date, end_date)
+        elif event.is_recurring and event.recurrence_type == 'custom':
+            event_dates = [date for date in event.custom_recurrence_dates if start_date <= date <= end_date]
+        else:
+            event_dates = [event.date]
+
+        for date in event_dates:
+            date_str = date.strftime('%Y-%m-%d')
+            if date_str not in events_by_date:
+                events_by_date[date_str] = []
+            events_by_date[date_str].append({
+                'id': event.id,
+                'name': event.name,
+                'time': event.time.strftime('%H:%M'),
+                'is_recurring': event.is_recurring,
+                'recurrence_type': event.recurrence_type
+            })
+
     return jsonify(events_by_date)
+
+def generate_recurring_dates(event, start_date, end_date):
+    dates = []
+    current_date = max(event.date, start_date)
+    end_date = min(event.recurrence_end_date or end_date, end_date)
+
+    while current_date <= end_date:
+        dates.append(current_date)
+        if event.recurrence_type == 'daily':
+            current_date += timedelta(days=1)
+        elif event.recurrence_type == 'weekly':
+            current_date += timedelta(weeks=1)
+        elif event.recurrence_type == 'monthly':
+            current_date = current_date.replace(month=current_date.month % 12 + 1)
+            if current_date.month == 1:
+                current_date = current_date.replace(year=current_date.year + 1)
+        elif event.recurrence_type == 'yearly':
+            current_date = current_date.replace(year=current_date.year + 1)
+
+    return dates
 
 @app.route('/embed')
 def embed():
@@ -99,6 +145,13 @@ def edit_event(event_id):
         event.is_recurring = 'is_recurring' in request.form
         event.recurrence_type = request.form.get('recurrence_type')
         event.recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+        custom_recurrence_dates = request.form.get('custom_recurrence_dates')
+        
+        if custom_recurrence_dates:
+            event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in custom_recurrence_dates.split(',')]
+        else:
+            event.custom_recurrence_dates = None
+
         db.session.commit()
         return redirect(url_for('manage_events'))
     return render_template('edit_event.html', event=event)
@@ -136,7 +189,8 @@ def duplicate_event(event_id):
         time=original_event.time,
         is_recurring=original_event.is_recurring,
         recurrence_type=original_event.recurrence_type,
-        recurrence_end_date=original_event.recurrence_end_date
+        recurrence_end_date=original_event.recurrence_end_date,
+        custom_recurrence_dates=original_event.custom_recurrence_dates
     )
     db.session.add(new_event)
     db.session.commit()

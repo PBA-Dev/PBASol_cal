@@ -30,11 +30,16 @@
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
                 <option value="yearly">Yearly</option>
+                <option value="custom">Custom</option>
             </select>
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="recurrence_end_date_container">
             <label for="recurrence_end_date" class="form-label">End Date</label>
             <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date">
+        </div>
+        <div class="mb-3" id="custom_recurrence_dates_container" style="display: none;">
+            <label for="custom_recurrence_dates" class="form-label">Custom Recurrence Dates</label>
+            <input type="text" class="form-control" id="custom_recurrence_dates" name="custom_recurrence_dates">
         </div>
     </div>
     <button type="submit" class="btn btn-primary">Add Event</button>
@@ -42,14 +47,34 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const addEventForm = document.getElementById('addEventForm');
     const isRecurringCheckbox = document.getElementById('is_recurring');
     const recurringOptions = document.getElementById('recurring_options');
+    const recurrenceTypeSelect = document.getElementById('recurrence_type');
+    const recurrenceEndDateContainer = document.getElementById('recurrence_end_date_container');
+    const customRecurrenceDatesContainer = document.getElementById('custom_recurrence_dates_container');
 
     isRecurringCheckbox.addEventListener('change', function() {
         recurringOptions.style.display = this.checked ? 'block' : 'none';
+    });
+
+    recurrenceTypeSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            recurrenceEndDateContainer.style.display = 'none';
+            customRecurrenceDatesContainer.style.display = 'block';
+        } else {
+            recurrenceEndDateContainer.style.display = 'block';
+            customRecurrenceDatesContainer.style.display = 'none';
+        }
+    });
+
+    flatpickr("#custom_recurrence_dates", {
+        mode: "multiple",
+        dateFormat: "Y-m-d",
+        conjunction: ", "
     });
 
     addEventForm.addEventListener('submit', function(e) {
@@ -78,4 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
