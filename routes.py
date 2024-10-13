@@ -1,7 +1,8 @@
-from flask import render_template, request, jsonify, redirect, url_for
+from flask import render_template, request, jsonify, redirect, url_for, flash
 from app import app, db
 from models import Event
 from datetime import datetime
+from flask_wtf.csrf import generate_csrf
 
 @app.route('/')
 def index():
@@ -44,7 +45,8 @@ def embed():
 @app.route('/manage_events')
 def manage_events():
     events = Event.query.order_by(Event.date, Event.time).all()
-    return render_template('manage_events.html', events=events)
+    csrf_token = generate_csrf()
+    return render_template('manage_events.html', events=events, csrf_token=csrf_token)
 
 @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
 def edit_event(event_id):
@@ -62,4 +64,21 @@ def delete_event(event_id):
     event = Event.query.get_or_404(event_id)
     db.session.delete(event)
     db.session.commit()
+    return redirect(url_for('manage_events'))
+
+@app.route('/bulk_delete_events', methods=['POST'])
+def bulk_delete_events():
+    event_ids = request.form.getlist('event_ids')
+    if not event_ids:
+        flash('No events selected for deletion.', 'warning')
+        return redirect(url_for('manage_events'))
+
+    try:
+        Event.query.filter(Event.id.in_(event_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'Successfully deleted {len(event_ids)} event(s).', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred while deleting events: {str(e)}', 'danger')
+
     return redirect(url_for('manage_events'))
