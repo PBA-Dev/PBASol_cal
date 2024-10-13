@@ -14,12 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
     let events = {};
-    let currentView = 'month'; // Add this line to keep track of the current view
+    let currentView = 'month';
     
-    // Check if the calendar is in embedded mode
     const isEmbedded = document.body.classList.contains('embedded');
     
-    // Function to create a month element
     function createMonthElement(date) {
         console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de })}`);
         const monthEl = document.createElement('div');
@@ -43,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentDay = dateFns.startOfMonth(date);
         let weekRow = document.createElement('tr');
         
-        // Add empty cells for days before the 1st of the month
         for (let i = 0; i < dateFns.getDay(currentDay); i++) {
             weekRow.appendChild(document.createElement('td'));
         }
@@ -62,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
             currentDay = dateFns.addDays(currentDay, 1);
         }
         
-        // Add remaining empty cells
         while (weekRow.children.length < 7) {
             weekRow.appendChild(document.createElement('td'));
         }
@@ -71,7 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return monthEl;
     }
     
-    // Function to create a week element
     function createWeekElement(date) {
         console.log(`Creating week element for ${dateFns.format(date, 'MMMM yyyy', { locale: dateFns.de })}`);
         const weekEl = document.createElement('div');
@@ -114,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return weekEl;
     }
     
-    // Function to create a day element
     function createDayElement(date) {
         console.log(`Creating day element for ${dateFns.format(date, 'MMMM dd, yyyy', { locale: dateFns.de })}`);
         const dayEl = document.createElement('div');
@@ -149,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return dayEl;
     }
     
-    // Function to update the calendar
     function updateCalendar() {
         calendarEl.innerHTML = '';
         let startDate, endDate;
@@ -175,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fetchAndDisplayEvents(startDate, endDate);
     }
     
-    // Create view selection buttons
     if (!isEmbedded) {
         const viewControls = document.createElement('div');
         viewControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
@@ -204,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Create pagination controls
     if (!isEmbedded) {
         const paginationControls = document.createElement('div');
         paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
@@ -245,7 +236,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Fetch and display events
     function fetchAndDisplayEvents(startDate, endDate) {
         console.log('Fetching events');
         
@@ -325,6 +315,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initialize the calendar
     updateCalendar();
 });
