@@ -1,24 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event fired');
     
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorMessage = document.getElementById('error-message');
+    const calendarContainer = document.getElementById('calendar-container');
+    const calendarEl = document.getElementById('calendar');
+    
     console.log('Checking for date-fns library');
     if (typeof dateFns === 'undefined') {
         console.error('date-fns library is not loaded. Please check your network connection and try refreshing the page.');
-        document.getElementById('calendar').innerHTML = '<p class="text-danger">Error: Unable to load the calendar. Please check your network connection and try refreshing the page. If the problem persists, please contact support.</p>';
+        showError('Unable to load the calendar. Please check your network connection and try refreshing the page. If the problem persists, please contact support.');
         return;
     }
     
     console.log('date-fns library loaded successfully');
     
-    const calendarEl = document.getElementById('calendar');
     console.log('Calendar element:', calendarEl);
 
     console.log('Initializing variables');
-    const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
-    const eventModalBody = document.getElementById('eventModalBody');
     let currentDate = new Date();
     let events = {};
-    let currentView = calendarEl.dataset.view || 'month';
+    let currentView = calendarContainer.dataset.view || 'month';
     
     const isEmbedded = document.body.classList.contains('embedded');
     console.log('Is embedded:', isEmbedded);
@@ -75,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateCalendar() {
         console.log('Updating calendar');
+        showLoading();
         calendarEl.innerHTML = '';
         let startDate, endDate;
         
@@ -92,30 +95,17 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchAndDisplayEvents(startDate, endDate);
         } catch (error) {
             console.error('Error in updateCalendar:', error);
-            calendarEl.innerHTML = `<p class="text-danger">Error: Unable to update the calendar. Details: ${error.message}</p>`;
+            showError(`Unable to update the calendar. Details: ${error.message}`);
         }
     }
     
-    if (!isEmbedded) {
-        const viewControls = document.createElement('div');
-        viewControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
-        viewControls.innerHTML = `
-            <div class="btn-group" role="group" aria-label="Calendar views">
-                <button id="monthView" class="btn btn-secondary">Month</button>
-                <button id="weekView" class="btn btn-secondary">Week</button>
-                <button id="dayView" class="btn btn-secondary">Day</button>
-            </div>
-        `;
-        calendarEl.parentNode.insertBefore(viewControls, calendarEl);
-    }
-
     const paginationControls = document.createElement('div');
     paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
     paginationControls.innerHTML = `
-        <button id="prevPeriod" class="btn btn-sm ${isEmbedded ? 'btn-outline-secondary' : 'btn-secondary'}">&lt;</button>
-        <button id="nextPeriod" class="btn btn-sm ${isEmbedded ? 'btn-outline-secondary' : 'btn-secondary'}">&gt;</button>
+        <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
+        <button id="nextPeriod" class="btn btn-sm btn-outline-secondary">&gt;</button>
     `;
-    calendarEl.parentNode.insertBefore(paginationControls, calendarEl);
+    calendarContainer.insertBefore(paginationControls, calendarEl);
     
     document.getElementById('prevPeriod').addEventListener('click', () => {
         currentDate = dateFns.subMonths(currentDate, 1);
@@ -142,10 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`Received events for ${Object.keys(fetchedEvents).length} dates`);
                 events = fetchedEvents;
                 displayEvents();
+                hideLoading();
             })
             .catch(error => {
                 console.error('Error fetching events:', error);
-                calendarEl.innerHTML += '<p class="text-danger">Error: Unable to load events. Please try refreshing the page.</p>';
+                showError('Unable to load events. Please try refreshing the page.');
             });
     }
     
@@ -166,62 +157,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (dateEvents.some(event => event.is_recurring)) {
                         cell.classList.add('recurring-event');
                     }
-                    if (!isEmbedded) {
-                        cell.addEventListener('click', () => showEventDetails(date));
-                    } else {
-                        cell.title = dateEvents.map(event => `${event.name} (${event.time})`).join('\n');
-                    }
+                    cell.title = dateEvents.map(event => `${event.name} (${event.time})`).join('\n');
                 }
             });
         });
         console.log('Events displayed');
     }
     
-    function showEventDetails(date) {
-        if (isEmbedded) return;
-        
-        const dateEvents = events[date] || [];
-        const formattedDate = dateFns.format(new Date(date), 'dd.MM.yyyy');
-        let eventsList = dateEvents.map(event => `
-            <div class="event-item">
-                <h5>${event.name} ${event.is_recurring ? '<span class="badge bg-info">Recurring</span>' : ''}</h5>
-                <p><strong>Time:</strong> ${event.time}</p>
-                <p><strong>Category:</strong> ${event.category || 'Default'}</p>
-                ${event.is_recurring ? `<p><strong>Recurrence:</strong> ${getRecurrenceTypeText(event.recurrence_type)}</p>` : ''}
-            </div>
-        `).join('');
-        
-        eventModalBody.innerHTML = `
-            <h4>${formattedDate}</h4>
-            ${eventsList || '<p>No events for this date.</p>'}
-        `;
-        eventModal.show();
+    function showLoading() {
+        loadingIndicator.style.display = 'block';
+        errorMessage.style.display = 'none';
+        calendarEl.style.display = 'none';
     }
     
-    function getRecurrenceTypeText(recurrenceType) {
-        switch (recurrenceType) {
-            case 'daily':
-                return 'Daily';
-            case 'weekly':
-                return 'Weekly';
-            case 'monthly':
-                return 'Monthly';
-            case 'yearly':
-                return 'Yearly';
-            case 'custom':
-                return 'Custom';
-            default:
-                return 'Unknown';
-        }
+    function hideLoading() {
+        loadingIndicator.style.display = 'none';
+        calendarEl.style.display = 'block';
     }
     
-    console.log('Before initializing calendar');
+    function showError(message) {
+        loadingIndicator.style.display = 'none';
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = message;
+        calendarEl.style.display = 'none';
+    }
+    
+    console.log('Initializing calendar');
     try {
-        console.log('Initializing calendar');
         updateCalendar();
     } catch (error) {
         console.error('Error initializing calendar:', error);
-        calendarEl.innerHTML = `<p class="text-danger">Error: Unable to initialize the calendar. Details: ${error.message}</p>`;
+        showError(`Unable to initialize the calendar. Details: ${error.message}`);
     }
-    console.log('After initializing calendar');
+    console.log('Calendar initialization complete');
 });

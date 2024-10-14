@@ -3,19 +3,18 @@
 {% block title %}Embedded Calendar{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div id="calendar" class="row embedded-calendar" data-view="{{ view }}" style="min-height: 600px;">
-        <h2>Calendar Loading...</h2>
-        <p>If you can see this message, the HTML structure is working correctly.</p>
+<div class="container-fluid p-0">
+    <div id="calendar-container" class="row embedded-calendar" data-view="{{ view }}">
+        <div id="loading-indicator" class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading calendar...</p>
+        </div>
+        <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+        <div id="calendar"></div>
     </div>
 </div>
-{% if not embedded %}
-<div class="mt-4">
-    <h3>Embed Code</h3>
-    <p>Copy and paste the following code to embed this calendar on your website:</p>
-    <pre><code>{{ iframe_code }}</code></pre>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -24,31 +23,6 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-    .embedded-calendar {
-        height: 100vh;
-        overflow-y: auto;
-    }
-
-    .embedded-calendar .table {
-        font-size: 0.9rem;
-    }
-
-    .embedded-calendar .table td {
-        height: 30px;
-        width: 30px;
-    }
-
-    .embedded-calendar h3 {
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .embedded-calendar .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
-</style>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 {% endblock %}
 
