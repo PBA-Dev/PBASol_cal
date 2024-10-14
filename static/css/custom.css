@@ -128,7 +128,7 @@
     color: var(--bs-white);
 }
 
-/* New styles for repositioned navigation buttons */
+/* Styles for repositioned navigation buttons */
 #calendar .position-relative {
     padding: 0 40px;
 }
@@ -145,4 +145,14 @@
 
 #calendar #nextPeriod {
     right: 0;
+}
+
+/* Embedded calendar specific styles for navigation buttons */
+.embedded #calendar .position-relative {
+    padding: 0 30px;
+}
+
+.embedded #calendar .btn-sm {
+    padding: 0.1rem 0.3rem;
+    font-size: 0.7rem;
 }

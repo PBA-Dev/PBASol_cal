@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
-    const calendarContainer = document.getElementById('calendar-container');
+    const calendarContainer = document.getElementById('calendar-container') || document.getElementById('calendar');
     const calendarEl = document.getElementById('calendar');
     
     console.log('Checking for date-fns library');
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing variables');
     let currentDate = new Date();
     let events = {};
-    let currentView = calendarContainer.dataset.view || 'month';
+    let currentView = calendarContainer ? calendarContainer.dataset.view || 'month' : 'month';
     
     const isEmbedded = document.body.classList.contains('embedded');
     console.log('Is embedded:', isEmbedded);
@@ -98,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Fetching events for:', startDate, 'to', endDate);
             fetchAndDisplayEvents(startDate, endDate);
 
-            // Add event listeners to the new navigation buttons
             document.getElementById('prevPeriod').addEventListener('click', () => {
                 currentDate = dateFns.subMonths(currentDate, 1);
                 updateCalendar();
@@ -162,21 +161,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showLoading() {
-        loadingIndicator.style.display = 'block';
-        errorMessage.style.display = 'none';
-        calendarEl.style.display = 'none';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'block';
+        }
+        if (errorMessage) {
+            errorMessage.style.display = 'none';
+        }
+        if (calendarEl) {
+            calendarEl.style.display = 'none';
+        }
     }
     
     function hideLoading() {
-        loadingIndicator.style.display = 'none';
-        calendarEl.style.display = 'block';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        if (calendarEl) {
+            calendarEl.style.display = 'block';
+        }
     }
     
     function showError(message) {
-        loadingIndicator.style.display = 'none';
-        errorMessage.style.display = 'block';
-        errorMessage.textContent = message;
-        calendarEl.style.display = 'none';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        if (errorMessage) {
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+        if (calendarEl) {
+            calendarEl.style.display = 'none';
+        }
     }
     
     console.log('Initializing calendar');
