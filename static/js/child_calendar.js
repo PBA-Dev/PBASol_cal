@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Child Calendar: DOMContentLoaded event fired');
     
+    dateFns.locale(dateFns.de);
+
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
     const calendarContainer = document.getElementById('calendar-container');
@@ -16,12 +18,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let events = {};
     let currentView = calendarContainer ? calendarContainer.dataset.view || 'month' : 'month';
     
+    const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    
     function createMonthElement(date) {
         console.log(`Child Calendar: Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
         const monthEl = document.createElement('div');
         monthEl.classList.add('col-12', 'mb-4', 'position-relative');
         
-        const monthName = dateFns.format(date, 'MMMM yyyy');
+        const monthName = `${germanMonths[dateFns.getMonth(date)]} ${dateFns.getYear(date)}`;
         monthEl.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
@@ -31,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                        ${germanDays.map(day => `<th>${day}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -136,10 +141,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         cell.classList.add('recurring-event');
                     }
                     cell.title = dateEvents.map(event => `${event.name} (${event.time})`).join('\n');
+                    cell.style.cursor = 'pointer';
+                    cell.addEventListener('click', () => showEventDetails(date, dateEvents));
                 }
             });
         });
         console.log('Child Calendar: Events displayed');
+    }
+    
+    function showEventDetails(date, events) {
+        console.log('Child Calendar: Showing event details for', date);
+        const modalTitle = document.getElementById('eventModalLabel');
+        const modalBody = document.getElementById('eventModalBody');
+        
+        modalTitle.textContent = `Termine für ${dateFns.format(new Date(date), 'dd. MMMM yyyy')}`;
+        
+        let eventList = '<ul class="list-group">';
+        events.forEach(event => {
+            eventList += `
+                <li class="list-group-item">
+                    <h5 class="mb-1">${event.name}</h5>
+                    <p class="mb-1">Zeit: ${event.time}</p>
+                    <p class="mb-1">Kategorie: ${event.category}</p>
+                    ${event.is_recurring ? '<p class="mb-1"><em>Wiederkehrender Termin</em></p>' : ''}
+                </li>
+            `;
+        });
+        eventList += '</ul>';
+        
+        modalBody.innerHTML = eventList;
+        
+        const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+        eventModal.show();
     }
     
     function showLoading() {
