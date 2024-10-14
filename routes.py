@@ -9,6 +9,11 @@ def index():
     view = request.args.get('view', 'month')
     return render_template('calendar.html', view=view)
 
+@app.route('/child_embed')
+def child_embed():
+    view = request.args.get('view', 'month')
+    return render_template('child_embed.html', embedded=True, view=view)
+
 @app.route('/add_event', methods=['GET', 'POST'])
 def add_event():
     if request.method == 'POST':
@@ -244,8 +249,3 @@ def duplicate_event(event_id):
     db.session.add(new_event)
     db.session.commit()
     return jsonify({'success': True, 'message': 'Event duplicated successfully'}), 200
-
-@app.route('/child_embed')
-def child_embed():
-    view = request.args.get('view', 'month')
-    return render_template('child_embed.html', embedded=True, view=view)

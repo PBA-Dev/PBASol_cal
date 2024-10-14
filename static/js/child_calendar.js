@@ -154,6 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalTitle = document.getElementById('eventModalLabel');
         const modalBody = document.getElementById('eventModalBody');
         
+        if (!modalTitle || !modalBody) {
+            console.error('Child Calendar: Modal elements not found');
+            return;
+        }
+        
         modalTitle.textContent = `Termine für ${dateFns.format(new Date(date), 'dd. MMMM yyyy')}`;
         
         let eventList = '<ul class="list-group">';

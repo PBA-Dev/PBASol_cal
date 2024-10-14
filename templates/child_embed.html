@@ -1,13 +1,13 @@
 {% extends "embed_base.html" %}
 
-{% block title %}Child Calendar Embed{% endblock %}
+{% block title %}Kind-Kalender-Einbettung{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
     <div id="calendar-container" class="row embedded-calendar" data-view="{{ view }}">
         <div id="loading-indicator" class="text-center">
             <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden">Laden...</span>
             </div>
             <p>Kalender wird geladen...</p>
         </div>
@@ -22,7 +22,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="eventModalLabel">Termindetails</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body" id="eventModalBody">
                 <!-- Event details will be inserted here -->
