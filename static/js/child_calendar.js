@@ -19,13 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentView = calendarContainer ? calendarContainer.dataset.view || 'month' : 'month';
     
     const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     
     function createMonthElement(date) {
-        console.log(`Child Calendar: Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
+        console.log(`Child Calendar: Creating month element for ${germanMonths[dateFns.getMonth(date)]} ${dateFns.getYear(date)}`);
         const monthEl = document.createElement('div');
         monthEl.classList.add('col-12', 'mb-4', 'position-relative');
         
-        const monthName = dateFns.format(date, 'MMMM yyyy');
+        const monthName = `${germanMonths[dateFns.getMonth(date)]} ${dateFns.getYear(date)}`;
         monthEl.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
@@ -160,7 +161,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        modalTitle.textContent = `Termine für ${dateFns.format(new Date(date), 'dd. MMMM yyyy')}`;
+        const eventDate = new Date(date);
+        modalTitle.textContent = `Termine für ${dateFns.getDate(eventDate)}. ${germanMonths[dateFns.getMonth(eventDate)]} ${dateFns.getYear(eventDate)}`;
         
         let eventList = '<ul class="list-group">';
         events.forEach(event => {
