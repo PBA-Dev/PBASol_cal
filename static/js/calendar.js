@@ -154,10 +154,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         cell.classList.add('recurring-event');
                     }
                     cell.title = dateEvents.map(event => `${event.name} (${event.time})`).join('\n');
+                    cell.addEventListener('click', () => showEventDetails(date, dateEvents));
                 }
             });
         });
         console.log('Events displayed');
+    }
+    
+    function showEventDetails(date, events) {
+        console.log('Showing event details for', date);
+        const modalTitle = document.getElementById('eventModalLabel');
+        const modalBody = document.getElementById('eventModalBody');
+        
+        modalTitle.textContent = `Events for ${dateFns.format(new Date(date), 'MMMM d, yyyy')}`;
+        
+        let eventList = '<ul class="list-group">';
+        events.forEach(event => {
+            eventList += `
+                <li class="list-group-item">
+                    <h5 class="mb-1">${event.name}</h5>
+                    <p class="mb-1">Time: ${event.time}</p>
+                    <p class="mb-1">Category: ${event.category}</p>
+                    ${event.is_recurring ? '<p class="mb-1"><em>Recurring event</em></p>' : ''}
+                </li>
+            `;
+        });
+        eventList += '</ul>';
+        
+        modalBody.innerHTML = eventList;
+        
+        const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+        eventModal.show();
     }
     
     function showLoading() {
