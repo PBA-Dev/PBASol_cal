@@ -127,3 +127,22 @@
     background-color: var(--bs-primary);
     color: var(--bs-white);
 }
+
+/* New styles for repositioned navigation buttons */
+#calendar .position-relative {
+    padding: 0 40px;
+}
+
+#calendar .btn-sm {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#calendar #prevPeriod {
+    left: 0;
+}
+
+#calendar #nextPeriod {
+    right: 0;
+}

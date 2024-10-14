@@ -28,11 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function createMonthElement(date) {
         console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
         const monthEl = document.createElement('div');
-        monthEl.classList.add('col-12', 'mb-4');
+        monthEl.classList.add('col-12', 'mb-4', 'position-relative');
         
         const monthName = dateFns.format(date, 'MMMM yyyy');
         monthEl.innerHTML = `
-            <h3>${monthName}</h3>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
+                <h3>${monthName}</h3>
+                <button id="nextPeriod" class="btn btn-sm btn-outline-secondary">&gt;</button>
+            </div>
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -93,29 +97,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('Fetching events for:', startDate, 'to', endDate);
             fetchAndDisplayEvents(startDate, endDate);
+
+            // Add event listeners to the new navigation buttons
+            document.getElementById('prevPeriod').addEventListener('click', () => {
+                currentDate = dateFns.subMonths(currentDate, 1);
+                updateCalendar();
+            });
+            
+            document.getElementById('nextPeriod').addEventListener('click', () => {
+                currentDate = dateFns.addMonths(currentDate, 1);
+                updateCalendar();
+            });
         } catch (error) {
             console.error('Error in updateCalendar:', error);
             showError(`Unable to update the calendar. Details: ${error.message}`);
         }
     }
-    
-    const paginationControls = document.createElement('div');
-    paginationControls.classList.add('d-flex', 'justify-content-between', 'mb-3');
-    paginationControls.innerHTML = `
-        <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
-        <button id="nextPeriod" class="btn btn-sm btn-outline-secondary">&gt;</button>
-    `;
-    calendarContainer.insertBefore(paginationControls, calendarEl);
-    
-    document.getElementById('prevPeriod').addEventListener('click', () => {
-        currentDate = dateFns.subMonths(currentDate, 1);
-        updateCalendar();
-    });
-    
-    document.getElementById('nextPeriod').addEventListener('click', () => {
-        currentDate = dateFns.addMonths(currentDate, 1);
-        updateCalendar();
-    });
     
     function fetchAndDisplayEvents(startDate, endDate) {
         console.log('Fetching events');
