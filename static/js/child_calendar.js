@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Child Calendar: DOMContentLoaded event fired');
-    
-    dateFns.locale(dateFns.de);
 
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
@@ -14,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    console.log('Child Calendar: date-fns library loaded successfully');
+
     let currentDate = new Date();
     let events = {};
     let currentView = calendarContainer ? calendarContainer.dataset.view || 'month' : 'month';
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     
     function createMonthElement(date) {
-        console.log(`Child Calendar: Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
+        console.log(`Child Calendar: Creating month element for ${dateFns.format.default(date, 'MMMM yyyy', {locale: dateFns.de})}`);
         const monthEl = document.createElement('div');
         monthEl.classList.add('col-12', 'mb-4', 'position-relative');
         
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         const tbody = monthEl.querySelector('tbody');
-        let currentDay = dateFns.startOfMonth(date);
+        let currentDay = dateFns.startOfMonth.default(date);
         let weekRow = document.createElement('tr');
         
         for (let i = 0; i < dateFns.getDay(currentDay); i++) {
@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         while (dateFns.getMonth(currentDay) === dateFns.getMonth(date)) {
             const dayCell = document.createElement('td');
-            dayCell.textContent = dateFns.format(currentDay, 'd');
-            dayCell.dataset.date = dateFns.format(currentDay, 'yyyy-MM-dd');
+            dayCell.textContent = dateFns.format.default(currentDay, 'd');
+            dayCell.dataset.date = dateFns.format.default(currentDay, 'yyyy-MM-dd');
             weekRow.appendChild(dayCell);
             
             if (dateFns.getDay(currentDay) === 6) {
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 weekRow = document.createElement('tr');
             }
             
-            currentDay = dateFns.addDays(currentDay, 1);
+            currentDay = dateFns.addDays.default(currentDay, 1);
         }
         
         while (weekRow.children.length < 7) {
@@ -82,19 +82,19 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const monthElement = createMonthElement(currentDate);
             calendarEl.appendChild(monthElement);
-            const startDate = dateFns.startOfMonth(currentDate);
-            const endDate = dateFns.endOfMonth(currentDate);
+            const startDate = dateFns.startOfMonth.default(currentDate);
+            const endDate = dateFns.endOfMonth.default(currentDate);
             
             console.log('Child Calendar: Fetching events for:', startDate, 'to', endDate);
             fetchAndDisplayEvents(startDate, endDate);
 
             document.getElementById('prevPeriod').addEventListener('click', () => {
-                currentDate = dateFns.subMonths(currentDate, 1);
+                currentDate = dateFns.subMonths.default(currentDate, 1);
                 updateCalendar();
             });
             
             document.getElementById('nextPeriod').addEventListener('click', () => {
-                currentDate = dateFns.addMonths(currentDate, 1);
+                currentDate = dateFns.addMonths.default(currentDate, 1);
                 updateCalendar();
             });
         } catch (error) {
@@ -106,8 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchAndDisplayEvents(startDate, endDate) {
         console.log('Child Calendar: Fetching events');
         
-        fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`)
+        fetch(`/events?start_date=${dateFns.format.default(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format.default(endDate, 'yyyy-MM-dd')}`)
             .then(response => {
+                console.log('Child Calendar: Fetch response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -129,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Child Calendar: Displaying events');
         Object.keys(events).forEach(date => {
             const cells = document.querySelectorAll(`td[data-date="${date}"]`);
+            console.log(`Child Calendar: Found ${cells.length} cells for date ${date}`);
             cells.forEach(cell => {
                 const dateEvents = events[date];
                 
@@ -159,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        modalTitle.textContent = `Termine für ${dateFns.format(new Date(date), 'dd. MMMM yyyy')}`;
+        modalTitle.textContent = `Termine für ${dateFns.format.default(new Date(date), 'dd. MMMM yyyy', {locale: dateFns.de})}`;
         
         let eventList = '<ul class="list-group">';
         events.forEach(event => {
