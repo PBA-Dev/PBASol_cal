@@ -43,7 +43,8 @@ task = "shell.exec"
 args = "curl -I https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.min.js"
 
 [deployment]
-run = ["sh", "-c", "python main.py"]
+deploymentTarget = "static"
+publicDir = "/"
 
 [[ports]]
 localPort = 5000
