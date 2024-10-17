@@ -4,6 +4,50 @@ from app import db
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 
+def create_recurring_events(event):
+    if not event.is_recurring or not event.recurrence_type:
+        return
+
+    end_date = event.recurrence_end_date or (event.date + timedelta(days=365))  # Default to 1 year if no end date
+    current_date = event.date
+
+    while current_date <= end_date:
+        if event.recurrence_type == 'daily':
+            current_date += timedelta(days=1)
+        elif event.recurrence_type == 'weekly':
+            current_date += timedelta(weeks=1)
+        elif event.recurrence_type == 'monthly':
+            current_date = current_date.replace(month=current_date.month % 12 + 1)
+            if current_date.month == 1:
+                current_date = current_date.replace(year=current_date.year + 1)
+        elif event.recurrence_type == 'yearly':
+            current_date = current_date.replace(year=current_date.year + 1)
+        elif event.recurrence_type == 'custom':
+            if event.custom_recurrence_dates:
+                for custom_date in event.custom_recurrence_dates:
+                    if custom_date > event.date:
+                        new_event = Event(
+                            name=event.name,
+                            date=custom_date,
+                            time=event.time,
+                            is_recurring=False,
+                            category=event.category
+                        )
+                        db.session.add(new_event)
+            break  # Exit the loop after processing custom dates
+
+        if current_date <= end_date and current_date != event.date:
+            new_event = Event(
+                name=event.name,
+                date=current_date,
+                time=event.time,
+                is_recurring=False,
+                category=event.category
+            )
+            db.session.add(new_event)
+
+    db.session.commit()
+
 def init_routes(app):
     @app.route('/')
     def index():
