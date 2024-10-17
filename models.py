@@ -1,18 +1,21 @@
-from app import db
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 
+db = SQLAlchemy()
+
 class Event(db.Model):
+    __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_recurring = db.Column(db.Boolean, default=False)
-    recurrence_type = db.Column(db.String(20))  # 'daily', 'weekly', 'monthly', 'yearly', 'custom'
+    recurrence_type = db.Column(db.String(20))
     recurrence_end_date = db.Column(db.Date)
     custom_recurrence_dates = db.Column(ARRAY(db.Date))
-    category = db.Column(db.String(50), default='default')  # New field for event category
+    category = db.Column(db.String(50), default='default')
 
     def __repr__(self):
         return f'<Event {self.name}>'

@@ -1,38 +1,37 @@
 import os
 from flask import Flask, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
+from models import db, Event
 
-class Base(DeclarativeBase):
-    pass
+csrf = CSRFProtect()
+migrate = Migrate()
 
-db = SQLAlchemy(model_class=Base)
-app = Flask(__name__)
-csrf = CSRFProtect(app)
-migrate = Migrate(app, db)
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
 
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
+    db.init_app(app)
+    csrf.init_app(app)
+    migrate.init_app(app, db)
 
-print(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    with app.app_context():
+        db.create_all()
 
-db.init_app(app)
+    from routes import init_routes
+    init_routes(app)
 
-with app.app_context():
-    import models
-    db.create_all()
+    @app.route('/node_modules/<path:filename>')
+    def serve_node_modules(filename):
+        return send_from_directory('node_modules', filename)
 
-from routes import *
-
-@app.route('/node_modules/<path:filename>')
-def serve_node_modules(filename):
-    return send_from_directory('node_modules', filename)
+    return app
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(host="0.0.0.0", port=5000)

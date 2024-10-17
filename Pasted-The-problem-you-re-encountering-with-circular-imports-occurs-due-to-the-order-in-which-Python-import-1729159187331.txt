@@ -1,0 +1,199 @@
+The problem you're encountering with circular imports occurs due to the order in which Python imports and the nature of Flask applications with intertwined dependencies. This happens when the different files import each other in a way that causes a loop, which the interpreter cannot resolve. Let's go through how we can solve these issues by restructuring the imports and modifying your file setup.
+
+Problem Summary:
+The circular import issue arises because app.py imports models.py, and models.py imports app.py.
+Additionally, when multiple files reference app or db, it causes confusion, especially since db is initialized in one module and reused in multiple places.
+Solutions to Fix the Circular Import Issue
+Avoid Importing app in models.py Directly.
+Refactor Imports by Delaying Them to prevent direct dependency cycles.
+Break the Initialization into distinct phases and isolate model and route imports.
+Step-by-Step Changes
+1. Restructure app.py
+Move model imports and route initialization to avoid circular dependencies by delaying these imports.
+python
+Copy code
+import os
+from flask import Flask, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate
+
+# SQLAlchemy base
+class Base(DeclarativeBase):
+    pass
+
+# Instantiate extensions
+db = SQLAlchemy(model_class=Base)
+csrf = CSRFProtect()
+migrate = Migrate()
+
+def create_app():
+    # Create Flask app instance
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+
+    # Initialize extensions with app
+    db.init_app(app)
+    csrf.init_app(app)
+    migrate.init_app(app, db)
+
+    # Import models to register with SQLAlchemy
+    with app.app_context():
+        from models import Event  # Delayed import to avoid circular dependency
+        db.create_all()
+
+    # Register routes
+    from routes import init_routes
+    init_routes(app)
+
+    # Serve node_modules (if applicable)
+    @app.route('/node_modules/<path:filename>')
+    def serve_node_modules(filename):
+        return send_from_directory('node_modules', filename)
+
+    return app
+
+# Run app (for local development)
+if __name__ == "__main__":
+    app = create_app()
+    app.run(host="0.0.0.0", port=5000)
+2. Update models.py
+Instead of importing db from app, import it from the correct source. Since db is defined in app.py, it’s safe to use app.db as long as you avoid direct references until after create_app() is called.
+python
+Copy code
+from app import db
+from datetime import datetime
+from sqlalchemy.dialects.postgresql import ARRAY
+
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.Time, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_recurring = db.Column(db.Boolean, default=False)
+    recurrence_type = db.Column(db.String(20))  # 'daily', 'weekly', 'monthly', 'yearly', 'custom'
+    recurrence_end_date = db.Column(db.Date)
+    custom_recurrence_dates = db.Column(ARRAY(db.Date))
+    category = db.Column(db.String(50), default='default')  # New field for event category
+
+    def __repr__(self):
+        return f'<Event {self.name}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'date': self.date.isoformat(),
+            'time': self.time.isoformat(),
+            'is_recurring': self.is_recurring,
+            'recurrence_type': self.recurrence_type,
+            'recurrence_end_date': self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
+            'custom_recurrence_dates': [date.isoformat() for date in self.custom_recurrence_dates] if self.custom_recurrence_dates else None,
+            'category': self.category
+        }
+3. Update routes.py
+Instead of directly importing app, change how you initialize the routes.
+python
+Copy code
+from flask import render_template, request, jsonify, redirect, url_for, flash
+from models import Event
+from app import db
+from datetime import datetime, timedelta
+from flask_wtf.csrf import generate_csrf
+
+def init_routes(app):
+    @app.route('/')
+    def index():
+        view = request.args.get('view', 'month')
+        return render_template('calendar.html', view=view)
+
+    @app.route('/child_embed')
+    def child_embed():
+        view = request.args.get('view', 'month')
+        return render_template('child_embed.html', embedded=True, view=view)
+
+    @app.route('/add_event', methods=['GET', 'POST'])
+    def add_event():
+        if request.method == 'POST':
+            try:
+                name = request.form['name']
+                date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+                time = datetime.strptime(request.form['time'], '%H:%M').time()
+                is_recurring = 'is_recurring' in request.form
+                recurrence_type = request.form.get('recurrence_type')
+                recurrence_end_date = datetime.strptime(request.form.get('recurrence_end_date', ''), '%Y-%m-%d').date() if request.form.get('recurrence_end_date') else None
+                custom_recurrence_dates = request.form.get('custom_recurrence_dates')
+                category = request.form.get('category', 'default')
+
+                new_event = Event(
+                    name=name,
+                    date=date,
+                    time=time,
+                    is_recurring=is_recurring,
+                    recurrence_type=recurrence_type,
+                    recurrence_end_date=recurrence_end_date,
+                    category=category
+                )
+
+                if custom_recurrence_dates:
+                    date_strings = [date_str.strip() for date_str in custom_recurrence_dates.split(',')]
+                    if len(date_strings) > 50:
+                        raise ValueError("Too many custom recurrence dates. Maximum allowed is 50.")
+                    new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in date_strings]
+
+                db.session.add(new_event)
+                db.session.commit()
+
+                if is_recurring:
+                    create_recurring_events(new_event)
+
+                flash('Event added successfully', 'success')
+                return redirect(url_for('index'))
+            except ValueError as e:
+                flash(f'Error adding event: {str(e)}', 'danger')
+        
+        return render_template('add_event.html')
+
+    # Add other route functions similarly without app references here
+4. Update main.py
+To eliminate circular imports, call create_app() and use that instance rather than importing app directly.
+python
+Copy code
+from app import create_app, db
+from models import Event
+from datetime import datetime, date, time
+
+app = create_app()
+
+def add_test_event():
+    with app.app_context():
+        test_event = Event(
+            name="Test Event",
+            date=date.today(),
+            time=time(12, 0)
+        )
+        db.session.add(test_event)
+        db.session.commit()
+        print("Test event added successfully")
+
+if __name__ == "__main__":
+    add_test_event()
+    app.run(host="0.0.0.0", port=5000)
+Key Points to Avoid Circular Import:
+Delayed Imports: Import models (Event) only after creating the app instance (with app.app_context()). This ensures that the app context is available when accessing models.
+
+Use Application Factories: Use the create_app() factory method, which provides better control over the initialization flow.
+
+Separate Concerns: Keep models, routes, and the main app initialization separate. Models should not import the application instance (app), only the db.
+
+Single Initialization Point: The db, migrate, and csrf instances should be initialized only once in the create_app() and imported from there, rather than re-importing app.
+
+Following these steps should help you eliminate the circular imports, allowing for proper deployment without conflicts involving multiple references to the Event model or other components.

@@ -1,9 +1,12 @@
-from app import app, db
-from models import Event
-from datetime import datetime, date, time
+from app import create_app, db
 
-def add_test_event():
-    with app.app_context():
+app = create_app()
+
+with app.app_context():
+    from models import Event
+    from datetime import date, time
+
+    def add_test_event():
         test_event = Event(
             name="Test Event",
             date=date.today(),
@@ -14,5 +17,6 @@ def add_test_event():
         print("Test event added successfully")
 
 if __name__ == "__main__":
-    add_test_event()
+    with app.app_context():
+        add_test_event()
     app.run(host="0.0.0.0", port=5000)
