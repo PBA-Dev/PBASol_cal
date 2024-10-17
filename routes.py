@@ -90,4 +90,24 @@ def init_routes(app):
         
         return jsonify(events_dict)
 
+    @app.route('/bulk_delete_events', methods=['POST'])
+    def bulk_delete_events():
+        event_ids = request.form.getlist('event_ids')
+        for event_id in event_ids:
+            event = Event.query.get(event_id)
+            if event:
+                db.session.delete(event)
+        db.session.commit()
+        flash('Selected events have been deleted', 'success')
+        return redirect(url_for('manage_events'))
+
+    # Register all routes with the app
+    app.add_url_rule('/', 'index', index)
+    app.add_url_rule('/child_embed', 'child_embed', child_embed)
+    app.add_url_rule('/embed', 'embed', embed)
+    app.add_url_rule('/add_event', 'add_event', add_event, methods=['GET', 'POST'])
+    app.add_url_rule('/manage_events', 'manage_events', manage_events)
+    app.add_url_rule('/events', 'get_events', get_events)
+    app.add_url_rule('/bulk_delete_events', 'bulk_delete_events', bulk_delete_events, methods=['POST'])
+
     return app
