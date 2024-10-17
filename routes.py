@@ -114,14 +114,22 @@ def init_routes(app):
             return redirect(url_for('manage_events'))
         return render_template('edit_event.html', event=event)
 
-    # Register all routes with the app
-    app.add_url_rule('/', 'index', index)
-    app.add_url_rule('/child_embed', 'child_embed', child_embed)
-    app.add_url_rule('/embed', 'embed', embed)
-    app.add_url_rule('/add_event', 'add_event', add_event, methods=['GET', 'POST'])
-    app.add_url_rule('/manage_events', 'manage_events', manage_events)
-    app.add_url_rule('/events', 'get_events', get_events)
-    app.add_url_rule('/bulk_delete_events', 'bulk_delete_events', bulk_delete_events, methods=['POST'])
-    app.add_url_rule('/edit_event/<int:event_id>', 'edit_event', edit_event, methods=['GET', 'POST'])
+    @app.route('/duplicate_event/<int:event_id>', methods=['POST'])
+    def duplicate_event(event_id):
+        event = Event.query.get_or_404(event_id)
+        new_event = Event(
+            name=f'Copy of {event.name}',
+            date=event.date,
+            time=event.time,
+            is_recurring=event.is_recurring,
+            recurrence_type=event.recurrence_type,
+            recurrence_end_date=event.recurrence_end_date,
+            custom_recurrence_dates=event.custom_recurrence_dates,
+            category=event.category
+        )
+        db.session.add(new_event)
+        db.session.commit()
+        flash('Event duplicated successfully', 'success')
+        return jsonify({'success': True}), 200
 
     return app
