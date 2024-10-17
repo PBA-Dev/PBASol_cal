@@ -101,6 +101,19 @@ def init_routes(app):
         flash('Selected events have been deleted', 'success')
         return redirect(url_for('manage_events'))
 
+    @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+    def edit_event(event_id):
+        event = Event.query.get_or_404(event_id)
+        if request.method == 'POST':
+            event.name = request.form['name']
+            event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+            event.time = datetime.strptime(request.form['time'], '%H:%M').time()
+            event.category = request.form.get('category', 'default')
+            db.session.commit()
+            flash('Event updated successfully', 'success')
+            return redirect(url_for('manage_events'))
+        return render_template('edit_event.html', event=event)
+
     # Register all routes with the app
     app.add_url_rule('/', 'index', index)
     app.add_url_rule('/child_embed', 'child_embed', child_embed)
@@ -109,5 +122,6 @@ def init_routes(app):
     app.add_url_rule('/manage_events', 'manage_events', manage_events)
     app.add_url_rule('/events', 'get_events', get_events)
     app.add_url_rule('/bulk_delete_events', 'bulk_delete_events', bulk_delete_events, methods=['POST'])
+    app.add_url_rule('/edit_event/<int:event_id>', 'edit_event', edit_event, methods=['GET', 'POST'])
 
     return app
