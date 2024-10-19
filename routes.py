@@ -64,7 +64,8 @@ def init_routes(app):
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
-                return redirect(url_for('index'))
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('index'))
             else:
                 flash('Invalid username or password', 'danger')
         return render_template('login.html')
