@@ -31,6 +31,15 @@ def create_app():
         node_modules_path = os.path.join(app.root_path, 'node_modules')
         return send_from_directory(node_modules_path, filename)
 
+    # Add debug logging for environment variables
+    app.logger.info(f"FLASK_SECRET_KEY is {'set' if os.environ.get('FLASK_SECRET_KEY') else 'not set'}")
+    app.logger.info(f"DATABASE_URL is {'set' if os.environ.get('DATABASE_URL') else 'not set'}")
+    app.logger.info(f"PGPORT is {'set' if os.environ.get('PGPORT') else 'not set'}")
+    app.logger.info(f"PGUSER is {'set' if os.environ.get('PGUSER') else 'not set'}")
+    app.logger.info(f"PGPASSWORD is {'set' if os.environ.get('PGPASSWORD') else 'not set'}")
+    app.logger.info(f"PGDATABASE is {'set' if os.environ.get('PGDATABASE') else 'not set'}")
+    app.logger.info(f"PGHOST is {'set' if os.environ.get('PGHOST') else 'not set'}")
+
     return app
 
 if __name__ == "__main__":

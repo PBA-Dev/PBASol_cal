@@ -62,7 +62,8 @@ def init_routes(app):
     @app.route('/embed')
     def embed():
         view = request.args.get('view', 'month')
-        iframe_code = f'<iframe src="{request.host_url}child_embed" width="100%" height="600" frameborder="0"></iframe>'
+        child_embed_url = request.url_root.rstrip('/') + url_for('child_embed')
+        iframe_code = f'<iframe src="{child_embed_url}" width="100%" height="600" frameborder="0"></iframe>'
         return render_template('embed.html', view=view, iframe_code=iframe_code)
 
     @app.route('/add_event', methods=['GET', 'POST'])
