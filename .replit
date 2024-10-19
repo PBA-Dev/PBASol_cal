@@ -119,7 +119,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "git remote add origin https://github.com/PBA-Dev/solutions-calendar.git && git branch -M main && git push -u origin main"
+args = "git push -u origin main"
 
 [[workflows.workflow]]
 name = "Git Remote Check"
