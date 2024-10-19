@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
+import logging
 
 def create_recurring_events(event):
     if not event.is_recurring or not event.recurrence_type:
@@ -58,15 +59,20 @@ def init_routes(app):
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        logging.debug('Login route accessed')
         if request.method == 'POST':
+            logging.debug('Login POST request')
+            logging.debug('Form data: %s', request.form)
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
+                logging.debug('User logged in successfully')
                 next_page = request.args.get('next')
                 return redirect(next_page or url_for('index'))
             else:
+                logging.debug('Invalid login attempt')
                 flash('Invalid username or password', 'danger')
         return render_template('login.html')
 
