@@ -31,6 +31,10 @@ args = "Download and verify date-fns"
 task = "workflow.run"
 args = "Check date-fns CDN"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Git Setup"
+
 [[workflows.workflow]]
 name = "Run Flask App"
 author = "agent"
@@ -87,10 +91,21 @@ agentRequireRestartOnSave = false
 task = "shell.exec"
 args = "curl -I https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js"
 
+[[workflows.workflow]]
+name = "Git Setup"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git init && git add . && git commit -m 'Initial commit'"
+
 [deployment]
 deploymentTarget = "static"
 publicDir = "/"
-run = ["sh", "-c", "curl -s https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js -o static/js/date-fns.min.js"]
+run = ["sh", "-c", "git init && git add . && git commit -m 'Initial commit'"]
 
 [[ports]]
 localPort = 5000
