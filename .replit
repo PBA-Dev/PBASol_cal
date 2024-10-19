@@ -39,6 +39,10 @@ args = "Git Setup"
 task = "workflow.run"
 args = "Git Push"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Git Remote Check"
+
 [[workflows.workflow]]
 name = "Run Flask App"
 author = "agent"
@@ -116,6 +120,17 @@ agentRequireRestartOnSave = false
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "git remote add origin https://github.com/PBA-Dev/solutions-calendar.git && git branch -M main && git push -u origin main"
+
+[[workflows.workflow]]
+name = "Git Remote Check"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git remote -v"
 
 [deployment]
 deploymentTarget = "static"
