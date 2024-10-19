@@ -1,8 +1,8 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash
 from models import Event, User
-from app import db
+from app import db, csrf
 from datetime import datetime, timedelta
-from flask_wtf.csrf import generate_csrf, csrf_protected
+from flask_wtf.csrf import generate_csrf
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash
 
@@ -10,7 +10,7 @@ def create_recurring_events(event):
     if not event.is_recurring or not event.recurrence_type:
         return
 
-    end_date = event.recurrence_end_date or (event.date + timedelta(days=365))  # Default to 1 year if no end date
+    end_date = event.recurrence_end_date or (event.date + timedelta(days=365))
     current_date = event.date
 
     while current_date <= end_date:
@@ -36,7 +36,7 @@ def create_recurring_events(event):
                             category=event.category
                         )
                         db.session.add(new_event)
-            break  # Exit the loop after processing custom dates
+            break
 
         if current_date <= end_date and current_date != event.date:
             new_event = Event(
@@ -57,9 +57,14 @@ def init_routes(app):
         return render_template('calendar.html', view=view)
 
     @app.route('/login', methods=['GET', 'POST'])
-    @csrf_protected
+    @csrf.exempt
     def login():
         if request.method == 'POST':
+            csrf_token = request.form.get('csrf_token')
+            if not csrf_token or csrf_token != generate_csrf():
+                flash('CSRF token missing or invalid', 'danger')
+                return redirect(url_for('login'))
+            
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
