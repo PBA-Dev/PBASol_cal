@@ -28,7 +28,8 @@ def create_app():
 
     @app.route('/node_modules/<path:filename>')
     def serve_node_modules(filename):
-        return send_from_directory('node_modules', filename)
+        node_modules_path = os.path.join(app.root_path, 'node_modules')
+        return send_from_directory(node_modules_path, filename)
 
     return app
 

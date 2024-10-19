@@ -2,14 +2,14 @@
   "name": "eventhighlightcalendar",
   "version": "1.0.0",
   "main": "index.js",
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "date-fns": "^4.1.0"
-  }
+  "description": ""
 }

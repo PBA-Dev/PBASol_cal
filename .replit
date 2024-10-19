@@ -19,6 +19,18 @@ args = "Run Flask App"
 task = "workflow.run"
 args = "Check date-fns"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Download date-fns"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Download and verify date-fns"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Check date-fns CDN"
+
 [[workflows.workflow]]
 name = "Run Flask App"
 author = "agent"
@@ -42,9 +54,43 @@ agentRequireRestartOnSave = false
 task = "shell.exec"
 args = "curl -I https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.min.js"
 
+[[workflows.workflow]]
+name = "Download date-fns"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -s https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js -o static/js/date-fns.min.js"
+
+[[workflows.workflow]]
+name = "Download and verify date-fns"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -s https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js -o static/js/date-fns.min.js && head -n 5 static/js/date-fns.min.js"
+
+[[workflows.workflow]]
+name = "Check date-fns CDN"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -I https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js"
+
 [deployment]
 deploymentTarget = "static"
 publicDir = "/"
+run = ["sh", "-c", "curl -s https://cdn.jsdelivr.net/npm/date-fns/dist/date-fns.min.js -o static/js/date-fns.min.js"]
 
 [[ports]]
 localPort = 5000
