@@ -1,8 +1,10 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash
-from models import Event
+from models import Event, User
 from app import db
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
+from flask_login import login_user, login_required, logout_user, current_user
+from werkzeug.security import check_password_hash
 
 def create_recurring_events(event):
     if not event.is_recurring or not event.recurrence_type:
@@ -54,6 +56,25 @@ def init_routes(app):
         view = request.args.get('view', 'month')
         return render_template('calendar.html', view=view)
 
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            user = User.query.filter_by(username=username).first()
+            if user and check_password_hash(user.password, password):
+                login_user(user)
+                return redirect(url_for('index'))
+            else:
+                flash('Invalid username or password', 'danger')
+        return render_template('login.html')
+
+    @app.route('/logout')
+    @login_required
+    def logout():
+        logout_user()
+        return redirect(url_for('index'))
+
     @app.route('/child_embed')
     def child_embed():
         view = request.args.get('view', 'month')
@@ -67,6 +88,7 @@ def init_routes(app):
         return render_template('embed.html', view=view, iframe_code=iframe_code)
 
     @app.route('/add_event', methods=['GET', 'POST'])
+    @login_required
     def add_event():
         if request.method == 'POST':
             try:
@@ -109,6 +131,7 @@ def init_routes(app):
         return render_template('add_event.html')
 
     @app.route('/manage_events')
+    @login_required
     def manage_events():
         events = Event.query.all()
         return render_template('manage_events.html', events=events)
@@ -136,6 +159,7 @@ def init_routes(app):
         return jsonify(events_dict)
 
     @app.route('/bulk_delete_events', methods=['POST'])
+    @login_required
     def bulk_delete_events():
         event_ids = request.form.getlist('event_ids')
         for event_id in event_ids:
@@ -147,6 +171,7 @@ def init_routes(app):
         return redirect(url_for('manage_events'))
 
     @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+    @login_required
     def edit_event(event_id):
         event = Event.query.get_or_404(event_id)
         if request.method == 'POST':
@@ -160,6 +185,7 @@ def init_routes(app):
         return render_template('edit_event.html', event=event)
 
     @app.route('/duplicate_event/<int:event_id>', methods=['POST'])
+    @login_required
     def duplicate_event(event_id):
         event = Event.query.get_or_404(event_id)
         new_event = Event(
