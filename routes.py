@@ -57,14 +57,8 @@ def init_routes(app):
         return render_template('calendar.html', view=view)
 
     @app.route('/login', methods=['GET', 'POST'])
-    @csrf.exempt
     def login():
         if request.method == 'POST':
-            csrf_token = request.form.get('csrf_token')
-            if not csrf_token or csrf_token != generate_csrf():
-                flash('CSRF token missing or invalid', 'danger')
-                return redirect(url_for('login'))
-            
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
