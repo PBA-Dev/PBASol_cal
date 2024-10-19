@@ -4,7 +4,7 @@ from app import db, csrf
 from datetime import datetime, timedelta
 from flask_wtf.csrf import generate_csrf
 from flask_login import login_user, login_required, logout_user, current_user
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 def create_recurring_events(event):
     if not event.is_recurring or not event.recurrence_type:
@@ -75,6 +75,26 @@ def init_routes(app):
     def logout():
         logout_user()
         return redirect(url_for('index'))
+
+    @app.route('/change_password', methods=['GET', 'POST'])
+    @login_required
+    def change_password():
+        if request.method == 'POST':
+            current_password = request.form['current_password']
+            new_password = request.form['new_password']
+            confirm_password = request.form['confirm_password']
+            
+            if not check_password_hash(current_user.password, current_password):
+                flash('Current password is incorrect', 'danger')
+            elif new_password != confirm_password:
+                flash('New passwords do not match', 'danger')
+            else:
+                current_user.password = generate_password_hash(new_password)
+                db.session.commit()
+                flash('Password changed successfully', 'success')
+                return redirect(url_for('index'))
+        
+        return render_template('change_password.html')
 
     @app.route('/child_embed')
     def child_embed():
