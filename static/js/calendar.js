@@ -116,7 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchAndDisplayEvents(startDate, endDate) {
         console.log('Fetching events');
         
-        fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`)
+        fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
             .then(response => {
                 console.log('Response status:', response.status);
                 if (!response.ok) {

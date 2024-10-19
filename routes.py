@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash
+from flask import render_template, request, jsonify, redirect, url_for, flash, session
 from models import Event, User
 from app import db, csrf
 from datetime import datetime, timedelta
@@ -68,6 +68,7 @@ def init_routes(app):
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
+                session['csrf_token'] = generate_csrf()
                 logging.debug('User logged in successfully')
                 next_page = request.args.get('next')
                 return redirect(next_page or url_for('index'))
@@ -164,6 +165,7 @@ def init_routes(app):
         return render_template('manage_events.html', events=events)
 
     @app.route('/events')
+    @csrf.exempt
     def get_events():
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')

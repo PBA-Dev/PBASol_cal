@@ -1,5 +1,5 @@
 import os
-from flask import Flask, send_from_directory, request
+from flask import Flask, send_from_directory, request, session
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -32,7 +32,8 @@ def create_app():
     @app.before_request
     def log_request_info():
         logging.debug('Headers: %s', request.headers)
-        logging.debug('Body: %s', request.get_data())
+        logging.debug('CSRF Token from form: %s', request.form.get('csrf_token'))
+        logging.debug('CSRF Token from session: %s', session.get('csrf_token'))
 
     @app.after_request
     def log_response_info(response):
