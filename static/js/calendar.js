@@ -1,36 +1,39 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded event fired');
+    console.log('DOMContentLoaded-Ereignis ausgelöst');
     
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessage = document.getElementById('error-message');
     const calendarContainer = document.getElementById('calendar-container') || document.getElementById('calendar');
     const calendarEl = document.getElementById('calendar');
     
-    console.log('Checking for date-fns library');
+    console.log('Überprüfe date-fns Bibliothek');
     if (typeof dateFns === 'undefined') {
-        console.error('date-fns library is not loaded. Please check your network connection and try refreshing the page.');
-        showError('Unable to load the calendar. Please check your network connection and try refreshing the page. If the problem persists, please contact support.');
+        console.error('date-fns Bibliothek ist nicht geladen. Bitte überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie, die Seite neu zu laden.');
+        showError('Der Kalender konnte nicht geladen werden. Bitte überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie, die Seite neu zu laden. Wenn das Problem weiterhin besteht, kontaktieren Sie bitte den Support.');
         return;
     }
     
-    console.log('date-fns library loaded successfully');
+    console.log('date-fns Bibliothek erfolgreich geladen');
     
-    console.log('Calendar element:', calendarEl);
+    console.log('Kalenderelement:', calendarEl);
 
-    console.log('Initializing variables');
+    console.log('Initialisiere Variablen');
     let currentDate = new Date();
     let events = {};
     let currentView = calendarContainer ? calendarContainer.dataset.view || 'month' : 'month';
     
     const isEmbedded = document.body.classList.contains('embedded');
-    console.log('Is embedded:', isEmbedded);
+    console.log('Ist eingebettet:', isEmbedded);
+    
+    const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
     
     function createMonthElement(date) {
-        console.log(`Creating month element for ${dateFns.format(date, 'MMMM yyyy')}`);
+        console.log(`Erstelle Monatselement für ${germanMonths[dateFns.getMonth(date)]} ${dateFns.getYear(date)}`);
         const monthEl = document.createElement('div');
         monthEl.classList.add('col-12', 'mb-4', 'position-relative');
         
-        const monthName = dateFns.format(date, 'MMMM yyyy');
+        const monthName = `${germanMonths[dateFns.getMonth(date)]} ${dateFns.getYear(date)}`;
         monthEl.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <button id="prevPeriod" class="btn btn-sm btn-outline-secondary">&lt;</button>
@@ -40,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                        ${germanDays.map(day => `<th>${day}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -75,27 +78,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         tbody.appendChild(weekRow);
         
-        console.log('Month element created:', monthEl);
+        console.log('Monatselement erstellt:', monthEl);
         return monthEl;
     }
     
     function updateCalendar() {
-        console.log('Updating calendar');
+        console.log('Aktualisiere Kalender');
         showLoading();
         calendarEl.innerHTML = '';
         let startDate, endDate;
         
-        console.log('Current view:', currentView);
-        console.log('Is embedded:', isEmbedded);
+        console.log('Aktuelle Ansicht:', currentView);
+        console.log('Ist eingebettet:', isEmbedded);
         
         try {
             const monthElement = createMonthElement(currentDate);
-            console.log('Month element created:', monthElement);
+            console.log('Monatselement erstellt:', monthElement);
             calendarEl.appendChild(monthElement);
             startDate = dateFns.startOfMonth(currentDate);
             endDate = dateFns.endOfMonth(currentDate);
             
-            console.log('Fetching events for:', startDate, 'to', endDate);
+            console.log('Hole Termine für:', startDate, 'bis', endDate);
             fetchAndDisplayEvents(startDate, endDate);
 
             document.getElementById('prevPeriod').addEventListener('click', () => {
@@ -108,13 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateCalendar();
             });
         } catch (error) {
-            console.error('Error in updateCalendar:', error);
-            showError(`Unable to update the calendar. Details: ${error.message}`);
+            console.error('Fehler in updateCalendar:', error);
+            showError(`Kalender konnte nicht aktualisiert werden. Details: ${error.message}`);
         }
     }
     
     function fetchAndDisplayEvents(startDate, endDate) {
-        console.log('Fetching events');
+        console.log('Hole Termine');
         
         fetch(`/events?start_date=${dateFns.format(startDate, 'yyyy-MM-dd')}&end_date=${dateFns.format(endDate, 'yyyy-MM-dd')}`, {
             method: 'GET',
@@ -123,29 +126,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
             .then(response => {
-                console.log('Response status:', response.status);
+                console.log('Antwortstatus:', response.status);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP-Fehler! Status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(fetchedEvents => {
-                console.log(`Received events for ${Object.keys(fetchedEvents).length} dates`);
+                console.log(`Termine für ${Object.keys(fetchedEvents).length} Daten erhalten`);
                 events = fetchedEvents;
                 displayEvents();
                 hideLoading();
             })
             .catch(error => {
-                console.error('Error fetching events:', error);
-                showError('Unable to load events. Please try refreshing the page.');
+                console.error('Fehler beim Abrufen der Termine:', error);
+                showError('Termine konnten nicht geladen werden. Bitte versuchen Sie, die Seite neu zu laden.');
             });
     }
     
     function displayEvents() {
-        console.log('Displaying events');
+        console.log('Zeige Termine');
         Object.keys(events).forEach(date => {
             const cells = document.querySelectorAll(`td[data-date="${date}"]`);
-            console.log(`Found ${cells.length} cells for date ${date}`);
+            console.log(`${cells.length} Zellen für Datum ${date} gefunden`);
             cells.forEach(cell => {
                 const dateEvents = events[date];
                 
@@ -163,24 +166,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        console.log('Events displayed');
+        console.log('Termine angezeigt');
     }
     
     function showEventDetails(date, events) {
-        console.log('Showing event details for', date);
+        console.log('Zeige Termindetails für', date);
         const modalTitle = document.getElementById('eventModalLabel');
         const modalBody = document.getElementById('eventModalBody');
         
-        modalTitle.textContent = `Events for ${dateFns.format(new Date(date), 'MMMM d, yyyy')}`;
+        modalTitle.textContent = `Termine für ${dateFns.format(new Date(date), 'd. MMMM yyyy')}`;
         
         let eventList = '<ul class="list-group">';
         events.forEach(event => {
             eventList += `
                 <li class="list-group-item">
                     <h5 class="mb-1">${event.name}</h5>
-                    <p class="mb-1">Time: ${event.time}</p>
-                    <p class="mb-1">Category: ${event.category}</p>
-                    ${event.is_recurring ? '<p class="mb-1"><em>Recurring event</em></p>' : ''}
+                    <p class="mb-1">Zeit: ${event.time}</p>
+                    <p class="mb-1">Kategorie: ${event.category}</p>
+                    ${event.is_recurring ? '<p class="mb-1"><em>Wiederholender Termin</em></p>' : ''}
                 </li>
             `;
         });
@@ -226,12 +229,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    console.log('Initializing calendar');
+    console.log('Initialisiere Kalender');
     try {
         updateCalendar();
     } catch (error) {
-        console.error('Error initializing calendar:', error);
-        showError(`Unable to initialize the calendar. Details: ${error.message}`);
+        console.error('Fehler bei der Initialisierung des Kalenders:', error);
+        showError(`Kalender konnte nicht initialisiert werden. Details: ${error.message}`);
     }
-    console.log('Calendar initialization complete');
+    console.log('Kalenderinitialisierung abgeschlossen');
 });

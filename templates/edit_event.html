@@ -1,34 +1,34 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Event{% endblock %}
+{% block title %}Termin bearbeiten{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Edit Event</h1>
+<h1 class="mb-4">Termin bearbeiten</h1>
 <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
-        <label for="name" class="form-label">Event Name</label>
+        <label for="name" class="form-label">Terminname</label>
         <input type="text" class="form-control" id="name" name="name" value="{{ event.name }}" required>
     </div>
     <div class="mb-3">
-        <label for="date" class="form-label">Date</label>
+        <label for="date" class="form-label">Datum</label>
         <input type="date" class="form-control" id="date" name="date" value="{{ event.date.strftime('%Y-%m-%d') }}" required>
     </div>
     <div class="mb-3">
-        <label for="time" class="form-label">Time</label>
+        <label for="time" class="form-label">Uhrzeit</label>
         <input type="time" class="form-control" id="time" name="time" value="{{ event.time.strftime('%H:%M') }}" required>
     </div>
     <div class="mb-3">
-        <label for="category" class="form-label">Category</label>
+        <label for="category" class="form-label">Kategorie</label>
         <select class="form-select" id="category" name="category">
-            <option value="default" {% if event.category == 'default' %}selected{% endif %}>Default</option>
-            <option value="work" {% if event.category == 'work' %}selected{% endif %}>Work</option>
-            <option value="personal" {% if event.category == 'personal' %}selected{% endif %}>Personal</option>
-            <option value="family" {% if event.category == 'family' %}selected{% endif %}>Family</option>
-            <option value="holiday" {% if event.category == 'holiday' %}selected{% endif %}>Holiday</option>
+            <option value="default" {% if event.category == 'default' %}selected{% endif %}>Standard</option>
+            <option value="work" {% if event.category == 'work' %}selected{% endif %}>Arbeit</option>
+            <option value="personal" {% if event.category == 'personal' %}selected{% endif %}>Persönlich</option>
+            <option value="family" {% if event.category == 'family' %}selected{% endif %}>Familie</option>
+            <option value="holiday" {% if event.category == 'holiday' %}selected{% endif %}>Feiertag</option>
         </select>
     </div>
-    <button type="submit" class="btn btn-primary">Update Event</button>
-    <a href="{{ url_for('manage_events') }}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Termin aktualisieren</button>
+    <a href="{{ url_for('manage_events') }}" class="btn btn-secondary">Abbrechen</a>
 </form>
 {% endblock %}

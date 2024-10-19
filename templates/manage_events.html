@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Events{% endblock %}
+{% block title %}Termine verwalten{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Manage Events</h1>
+<h1 class="mb-4">Termine verwalten</h1>
 <form id="bulk-delete-form" method="POST" action="{{ url_for('bulk_delete_events') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <table class="table table-striped">
@@ -11,9 +11,9 @@
             <tr>
                 <th><input type="checkbox" id="select-all"></th>
                 <th>Name</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Actions</th>
+                <th>Datum</th>
+                <th>Uhrzeit</th>
+                <th>Aktionen</th>
             </tr>
         </thead>
         <tbody>
@@ -24,14 +24,14 @@
                 <td>{{ event.date.strftime('%d.%m.%Y') }}</td>
                 <td>{{ event.time.strftime('%H:%M') }}</td>
                 <td>
-                    <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                    <button type="button" class="btn btn-sm btn-info duplicate-event" data-event-id="{{ event.id }}">Duplicate</button>
+                    <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-sm btn-primary">Bearbeiten</a>
+                    <button type="button" class="btn btn-sm btn-info duplicate-event" data-event-id="{{ event.id }}">Duplizieren</button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <button type="submit" class="btn btn-danger" id="bulk-delete-btn" disabled>Delete Selected</button>
+    <button type="submit" class="btn btn-danger" id="bulk-delete-btn" disabled>Ausgewählte löschen</button>
 </form>
 {% endblock %}
 
@@ -56,17 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateBulkDeleteButton() {
         const checkedCount = Array.from(eventCheckboxes).filter(cb => cb.checked).length;
         bulkDeleteBtn.disabled = checkedCount === 0;
-        bulkDeleteBtn.textContent = `Delete Selected (${checkedCount})`;
+        bulkDeleteBtn.textContent = `Ausgewählte löschen (${checkedCount})`;
     }
 
     bulkDeleteForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const checkedCount = Array.from(eventCheckboxes).filter(cb => cb.checked).length;
         if (checkedCount === 0) {
-            alert('Please select at least one event to delete.');
+            alert('Bitte wählen Sie mindestens einen Termin zum Löschen aus.');
             return;
         }
-        if (confirm(`Are you sure you want to delete ${checkedCount} event(s)?`)) {
+        if (confirm(`Sind Sie sicher, dass Sie ${checkedCount} Termin(e) löschen möchten?`)) {
             this.submit();
         }
     });
@@ -85,12 +85,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Failed to duplicate event. Please try again.');
+                    alert('Fehler beim Duplizieren des Termins. Bitte versuchen Sie es erneut.');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while duplicating the event.');
+                console.error('Fehler:', error);
+                alert('Ein Fehler ist beim Duplizieren des Termins aufgetreten.');
             });
         });
     });

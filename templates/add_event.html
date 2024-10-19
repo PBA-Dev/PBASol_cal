@@ -1,59 +1,59 @@
 {% extends "base.html" %}
 
-{% block title %}Add Event{% endblock %}
+{% block title %}Termin hinzufügen{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Add New Event</h1>
+<h1 class="mb-4">Neuen Termin hinzufügen</h1>
 <form id="addEventForm" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
-        <label for="name" class="form-label">Event Name</label>
+        <label for="name" class="form-label">Terminname</label>
         <input type="text" class="form-control" id="name" name="name" required>
     </div>
     <div class="mb-3">
-        <label for="date" class="form-label">Date</label>
+        <label for="date" class="form-label">Datum</label>
         <input type="date" class="form-control" id="date" name="date" required>
     </div>
     <div class="mb-3">
-        <label for="time" class="form-label">Time</label>
+        <label for="time" class="form-label">Uhrzeit</label>
         <input type="time" class="form-control" id="time" name="time" required>
     </div>
     <div class="mb-3">
         <label for="category" class="form-label">Kategorie</label>
         <select class="form-select" id="category" name="category">
             <option value="default">Standard</option>
-            <option value="work">Work</option>
-            <option value="personal">Personal</option>
-            <option value="family">Family</option>
-            <option value="holiday">Holiday</option>
+            <option value="work">Arbeit</option>
+            <option value="personal">Persönlich</option>
+            <option value="family">Familie</option>
+            <option value="holiday">Feiertag</option>
         </select>
     </div>
     <div class="mb-3 form-check">
         <input type="checkbox" class="form-check-input" id="is_recurring" name="is_recurring">
-        <label class="form-check-label" for="is_recurring">Wiederkehrendes Ereignis</label>
+        <label class="form-check-label" for="is_recurring">Wiederkehrender Termin</label>
     </div>
     <div id="recurring_options" style="display: none;">
         <div class="mb-3">
-            <label for="recurrence_type" class="form-label">Recurrence Type</label>
+            <label for="recurrence_type" class="form-label">Wiederholungstyp</label>
             <select class="form-select" id="recurrence_type" name="recurrence_type">
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="custom">Custom</option>
+                <option value="daily">Täglich</option>
+                <option value="weekly">Wöchentlich</option>
+                <option value="monthly">Monatlich</option>
+                <option value="yearly">Jährlich</option>
+                <option value="custom">Benutzerdefiniert</option>
             </select>
         </div>
         <div class="mb-3" id="recurrence_end_date_container">
-            <label for="recurrence_end_date" class="form-label">End Date</label>
+            <label for="recurrence_end_date" class="form-label">Enddatum</label>
             <input type="date" class="form-control" id="recurrence_end_date" name="recurrence_end_date">
         </div>
         <div class="mb-3" id="custom_recurrence_dates_container" style="display: none;">
-            <label for="custom_recurrence_dates" class="form-label">Custom Recurrence Dates (max 50)</label>
+            <label for="custom_recurrence_dates" class="form-label">Benutzerdefinierte Wiederholungsdaten (max. 50)</label>
             <input type="text" class="form-control" id="custom_recurrence_dates" name="custom_recurrence_dates">
-            <small class="form-text text-muted">Enter dates separated by commas (YYYY-MM-DD). Maximum 50 dates.</small>
+            <small class="form-text text-muted">Geben Sie Daten durch Kommas getrennt ein (TT.MM.JJJJ). Maximal 50 Daten.</small>
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Add Event</button>
+    <button type="submit" class="btn btn-primary">Termin hinzufügen</button>
 </form>
 {% endblock %}
 
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     flatpickr("#custom_recurrence_dates", {
         mode: "multiple",
-        dateFormat: "Y-m-d",
+        dateFormat: "d.m.Y",
         conjunction: ", "
     });
 
@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 window.location.href = '/';
             } else {
-                throw new Error('Failed to add event');
+                throw new Error('Fehler beim Hinzufügen des Termins');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to add event. Please try again.');
+            console.error('Fehler:', error);
+            alert('Fehler beim Hinzufügen des Termins. Bitte versuchen Sie es erneut.');
         });
     });
 });

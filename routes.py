@@ -59,23 +59,27 @@ def init_routes(app):
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
-        logging.debug('Login route accessed')
+        logging.debug('Login-Route aufgerufen')
         if request.method == 'POST':
-            logging.debug('Login POST request')
-            logging.debug('Form data: %s', request.form)
+            logging.debug('Login POST-Anfrage')
+            logging.debug('Formulardaten: %s', request.form)
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
-                session['csrf_token'] = generate_csrf()
-                logging.debug('User logged in successfully')
+                csrf_token = generate_csrf()
+                session['csrf_token'] = csrf_token
+                logging.debug('Benutzer erfolgreich angemeldet')
+                logging.debug('Generierter CSRF-Token: %s', csrf_token)
                 next_page = request.args.get('next')
                 return redirect(next_page or url_for('index'))
             else:
-                logging.debug('Invalid login attempt')
-                flash('Invalid username or password', 'danger')
-        return render_template('login.html')
+                logging.debug('Ungültiger Anmeldeversuch')
+                flash('Ungültiger Benutzername oder Passwort', 'danger')
+        csrf_token = generate_csrf()
+        logging.debug('Generierter CSRF-Token für GET-Anfrage: %s', csrf_token)
+        return render_template('login.html', csrf_token=csrf_token)
 
     @app.route('/logout')
     @login_required
@@ -92,13 +96,13 @@ def init_routes(app):
             confirm_password = request.form['confirm_password']
             
             if not check_password_hash(current_user.password, current_password):
-                flash('Current password is incorrect', 'danger')
+                flash('Aktuelles Passwort ist falsch', 'danger')
             elif new_password != confirm_password:
-                flash('New passwords do not match', 'danger')
+                flash('Neue Passwörter stimmen nicht überein', 'danger')
             else:
                 current_user.password = generate_password_hash(new_password)
                 db.session.commit()
-                flash('Password changed successfully', 'success')
+                flash('Passwort erfolgreich geändert', 'success')
                 return redirect(url_for('index'))
         
         return render_template('change_password.html')
@@ -142,7 +146,7 @@ def init_routes(app):
                 if custom_recurrence_dates:
                     date_strings = [date_str.strip() for date_str in custom_recurrence_dates.split(',')]
                     if len(date_strings) > 50:
-                        raise ValueError("Too many custom recurrence dates. Maximum allowed is 50.")
+                        raise ValueError("Zu viele benutzerdefinierte Wiederholungsdaten. Maximal 50 erlaubt.")
                     new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in date_strings]
 
                 db.session.add(new_event)
@@ -151,10 +155,10 @@ def init_routes(app):
                 if is_recurring:
                     create_recurring_events(new_event)
 
-                flash('Event added successfully', 'success')
+                flash('Termin erfolgreich hinzugefügt', 'success')
                 return redirect(url_for('index'))
             except ValueError as e:
-                flash(f'Error adding event: {str(e)}', 'danger')
+                flash(f'Fehler beim Hinzufügen des Termins: {str(e)}', 'danger')
         
         return render_template('add_event.html')
 
@@ -171,7 +175,7 @@ def init_routes(app):
         end_date = request.args.get('end_date')
         
         if not start_date or not end_date:
-            return jsonify({'error': 'start_date and end_date are required'}), 400
+            return jsonify({'error': 'start_date und end_date sind erforderlich'}), 400
         
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
@@ -196,7 +200,7 @@ def init_routes(app):
             if event:
                 db.session.delete(event)
         db.session.commit()
-        flash('Selected events have been deleted', 'success')
+        flash('Ausgewählte Termine wurden gelöscht', 'success')
         return redirect(url_for('manage_events'))
 
     @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
@@ -209,7 +213,7 @@ def init_routes(app):
             event.time = datetime.strptime(request.form['time'], '%H:%M').time()
             event.category = request.form.get('category', 'default')
             db.session.commit()
-            flash('Event updated successfully', 'success')
+            flash('Termin erfolgreich aktualisiert', 'success')
             return redirect(url_for('manage_events'))
         return render_template('edit_event.html', event=event)
 
@@ -218,7 +222,7 @@ def init_routes(app):
     def duplicate_event(event_id):
         event = Event.query.get_or_404(event_id)
         new_event = Event(
-            name=f'Copy of {event.name}',
+            name=f'Kopie von {event.name}',
             date=event.date,
             time=event.time,
             is_recurring=event.is_recurring,
@@ -229,7 +233,7 @@ def init_routes(app):
         )
         db.session.add(new_event)
         db.session.commit()
-        flash('Event duplicated successfully', 'success')
+        flash('Termin erfolgreich dupliziert', 'success')
         return jsonify({'success': True}), 200
 
     return app

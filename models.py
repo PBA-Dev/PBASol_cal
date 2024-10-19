@@ -21,10 +21,10 @@ class Event(db.Model):
     recurrence_type = db.Column(db.String(20))
     recurrence_end_date = db.Column(db.Date)
     custom_recurrence_dates = db.Column(ARRAY(db.Date))
-    category = db.Column(db.String(50), default='default')
+    category = db.Column(db.String(50), default='standard')
 
     def __repr__(self):
-        return f'<Event {self.name}>'
+        return f'<Termin {self.name}>'
 
     def to_dict(self):
         return {
