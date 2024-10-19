@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, redirect, url_for, flash
 from models import Event, User
 from app import db
 from datetime import datetime, timedelta
-from flask_wtf.csrf import generate_csrf
+from flask_wtf.csrf import generate_csrf, csrf_protected
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash
 
@@ -57,6 +57,7 @@ def init_routes(app):
         return render_template('calendar.html', view=view)
 
     @app.route('/login', methods=['GET', 'POST'])
+    @csrf_protected
     def login():
         if request.method == 'POST':
             username = request.form['username']
