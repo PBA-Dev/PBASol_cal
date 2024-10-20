@@ -43,6 +43,10 @@ args = "Git Push"
 task = "workflow.run"
 args = "Git Remote Check"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Check Recurring Events"
+
 [[workflows.workflow]]
 name = "Run Flask App"
 author = "agent"
@@ -131,6 +135,17 @@ agentRequireRestartOnSave = false
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "git remote -v"
+
+[[workflows.workflow]]
+name = "Check Recurring Events"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python check_recurring_events.py"
 
 [deployment]
 deploymentTarget = "static"
