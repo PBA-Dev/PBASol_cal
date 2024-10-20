@@ -74,8 +74,8 @@ def init_routes(app):
             else:
                 logging.debug('Ungültiger Anmeldeversuch')
                 flash('Ungültiger Benutzername oder Passwort', 'danger')
-        csrf_token = generate_csrf()
-        return render_template('login.html', csrf_token=csrf_token)
+        
+        return render_template('login.html')
 
     @app.route('/logout')
     @login_required
