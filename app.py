@@ -21,7 +21,8 @@ def create_app():
         "pool_recycle": 300,
         "pool_pre_ping": True,
     }
-    app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # Set CSRF token expiration to 1 hour
+    app.config['WTF_CSRF_TIME_LIMIT'] = None  # Disable CSRF token expiration
+    app.config['WTF_CSRF_SSL_STRICT'] = False  # Disable SSL requirement for CSRF
 
     db.init_app(app)
     csrf.init_app(app)

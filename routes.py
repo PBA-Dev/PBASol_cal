@@ -2,10 +2,16 @@ from flask import render_template, request, jsonify, redirect, url_for, flash, s
 from models import Event, User
 from app import db, csrf
 from datetime import datetime, timedelta
-from flask_wtf.csrf import generate_csrf
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 import logging
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
 
 def create_recurring_events(event):
     if not event.is_recurring or not event.recurrence_type:
@@ -60,12 +66,13 @@ def init_routes(app):
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         logging.debug('Login-Route aufgerufen')
-        if request.method == 'POST':
+        form = LoginForm()
+        if form.validate_on_submit():
             logging.debug('Login POST-Anfrage')
             logging.debug('Formulardaten: %s', request.form)
             
-            username = request.form['username']
-            password = request.form['password']
+            username = form.username.data
+            password = form.password.data
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
@@ -76,7 +83,7 @@ def init_routes(app):
                 logging.debug('Ungültiger Anmeldeversuch')
                 flash('Ungültiger Benutzername oder Passwort', 'danger')
         
-        return render_template('login.html')
+        return render_template('login.html', form=form)
 
     @app.route('/logout')
     @login_required
