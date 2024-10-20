@@ -63,6 +63,13 @@ def init_routes(app):
         if request.method == 'POST':
             logging.debug('Login POST-Anfrage')
             logging.debug('Formulardaten: %s', request.form)
+            
+            csrf_token = request.form.get('csrf_token')
+            if not csrf_token or csrf_token != session.get('csrf_token'):
+                logging.debug('Ungültiger CSRF-Token')
+                flash('Ungültiger CSRF-Token. Bitte versuchen Sie es erneut.', 'danger')
+                return redirect(url_for('login'))
+            
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
@@ -75,7 +82,9 @@ def init_routes(app):
                 logging.debug('Ungültiger Anmeldeversuch')
                 flash('Ungültiger Benutzername oder Passwort', 'danger')
         
-        return render_template('login.html')
+        csrf_token = generate_csrf()
+        session['csrf_token'] = csrf_token
+        return render_template('login.html', csrf_token=csrf_token)
 
     @app.route('/logout')
     @login_required
