@@ -68,18 +68,13 @@ def init_routes(app):
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
-                csrf_token = generate_csrf()
-                session['csrf_token'] = csrf_token
                 logging.debug('Benutzer erfolgreich angemeldet')
-                logging.debug('Generierter CSRF-Token: %s', csrf_token)
                 next_page = request.args.get('next')
                 return redirect(next_page or url_for('index'))
             else:
                 logging.debug('Ungültiger Anmeldeversuch')
                 flash('Ungültiger Benutzername oder Passwort', 'danger')
-        csrf_token = generate_csrf()
-        logging.debug('Generierter CSRF-Token für GET-Anfrage: %s', csrf_token)
-        return render_template('login.html', csrf_token=csrf_token)
+        return render_template('login.html')
 
     @app.route('/logout')
     @login_required
