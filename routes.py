@@ -1,10 +1,11 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash, session
-from models import Event, User
-from app import db, csrf
+import os
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from models import db, Event, User
 from datetime import datetime, timedelta
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired
+from flask_wtf.csrf import generate_csrf
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 import logging
@@ -137,6 +138,10 @@ def init_routes(app):
                 custom_recurrence_dates = request.form.get('custom_recurrence_dates')
                 category = request.form.get('category', 'default')
 
+                logging.info(f"Adding event: {name}, Date: {date}, Time: {time}, Is Recurring: {is_recurring}")
+                logging.info(f"Recurrence Type: {recurrence_type}, End Date: {recurrence_end_date}")
+                logging.info(f"Custom Recurrence Dates: {custom_recurrence_dates}")
+
                 new_event = Event(
                     name=name,
                     date=date,
@@ -152,6 +157,7 @@ def init_routes(app):
                     if len(date_strings) > 50:
                         raise ValueError("Zu viele benutzerdefinierte Wiederholungsdaten. Maximal 50 erlaubt.")
                     new_event.custom_recurrence_dates = [datetime.strptime(date_str, '%Y-%m-%d').date() for date_str in date_strings]
+                    logging.info(f"Parsed Custom Recurrence Dates: {new_event.custom_recurrence_dates}")
 
                 db.session.add(new_event)
                 db.session.commit()
@@ -162,6 +168,7 @@ def init_routes(app):
                 flash('Termin erfolgreich hinzugefügt', 'success')
                 return redirect(url_for('index'))
             except ValueError as e:
+                logging.error(f"Error adding event: {str(e)}")
                 flash(f'Fehler beim Hinzufügen des Termins: {str(e)}', 'danger')
         
         return render_template('add_event.html')
@@ -173,7 +180,6 @@ def init_routes(app):
         return render_template('manage_events.html', events=events)
 
     @app.route('/events')
-    @csrf.exempt
     def get_events():
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
