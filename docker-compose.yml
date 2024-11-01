@@ -1,0 +1,9 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "80:5000"  # Maps port 80 on the host to port 5000 in the container
+    volumes:
+      - .:/app
+    restart: always
